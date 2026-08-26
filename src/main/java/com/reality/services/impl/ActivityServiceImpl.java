@@ -66,15 +66,18 @@
 	      
 	    }
 	
-	    @Override
-	    public List<ActivityResponseDTO> getAllActivities() {
+	    
 	
-	        List<Activity> activities = activityRepository.findAll();
-	
-	        return activities.stream()
-	                .map(this::mapToResponseDTO)
-	                .toList();
-	    }
+	    	@Override
+	    	public List<ActivityResponseDTO> getAllActivities() {
+
+	    	    List<Activity> activities = activityRepository.findByActiveTrue();
+
+	    	    return activities.stream()
+	    	            .map(this::mapToResponseDTO)
+	    	            .toList();
+	    	}
+	    
 	
 	    @Override
 	    public ActivityResponseDTO getActivityById(Long id) {
