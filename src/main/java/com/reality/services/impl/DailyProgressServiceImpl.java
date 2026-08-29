@@ -57,6 +57,8 @@ public class DailyProgressServiceImpl
         // 3. Check whether daily target was completed
         boolean completed =
                 totalDuration >= requiredDuration;
+                
+                
 
         // 4. Return response
         return new DailyProgressResponseDTO(

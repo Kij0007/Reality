@@ -5,6 +5,10 @@ import java.time.LocalDateTime;
 import com.reality.enums.ActivityCategory;
 
 import lombok.Data;
+import java.time.LocalDate;
+
+import java.time.DayOfWeek;
+import java.util.Set;
 
 @Data
 public class ActivityResponseDTO {
@@ -18,10 +22,22 @@ public class ActivityResponseDTO {
     private ActivityCategory category;
 
     private Boolean active;
+    
+    private LocalDate startDate;
 
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+    
+    private Set<DayOfWeek> scheduledDays;
+    
+    public Set<DayOfWeek> getScheduledDays() {
+        return scheduledDays;
+    }
+
+    public void setScheduledDays(Set<DayOfWeek> scheduledDays) {
+        this.scheduledDays = scheduledDays;
+    }
 
 	public ActivityResponseDTO() {
 		super();
@@ -29,6 +45,14 @@ public class ActivityResponseDTO {
 
 	public Long getId() {
 		return id;
+	}
+	
+	public LocalDate getStartDate() {
+	    return startDate;
+	}
+
+	public void setStartDate(LocalDate startDate) {
+	    this.startDate = startDate;
 	}
 
 	public void setId(Long id) {
@@ -84,7 +108,7 @@ public class ActivityResponseDTO {
 	}
 
 	public ActivityResponseDTO(Long id, String name, Integer minimumDuration, ActivityCategory category, Boolean active,
-			LocalDateTime createdAt, LocalDateTime updatedAt) {
+			LocalDateTime createdAt, LocalDateTime updatedAt,Set<DayOfWeek> scheduledDays, LocalDate startDate ) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -93,6 +117,8 @@ public class ActivityResponseDTO {
 		this.active = active;
 		this.createdAt = createdAt;
 		this.updatedAt = updatedAt;
+		this.scheduledDays = scheduledDays;
+		this.startDate = startDate;
 	}
 
 }

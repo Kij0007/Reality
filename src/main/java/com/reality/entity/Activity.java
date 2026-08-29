@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import com.reality.enums.ActivityCategory;
 
@@ -20,6 +21,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import java.time.DayOfWeek;
+import java.util.HashSet;
+import java.util.Set;
+
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.JoinColumn;
 
 @Getter
 @Setter
@@ -36,6 +47,8 @@ public class Activity {
     private Long id;
 
     private String name;
+    
+    private LocalDate startDate;
 
     private Integer minimumDuration;
 
@@ -44,22 +57,51 @@ public class Activity {
 
     private Boolean active = true;
     
+    @ElementCollection
+    @CollectionTable(
+            name = "activity_scheduled_days",
+            joinColumns = @JoinColumn(name = "activity_id")
+    )
+    @Column(name = "day_of_week")
+    @Enumerated(EnumType.STRING)
+    private Set<DayOfWeek> scheduledDays = new HashSet<>();
+    
     
     
     public Activity() {
 		super();
 	}
 
-	public Activity(Long id, String name, Integer minimumDuration, ActivityCategory category, Boolean active,
-			LocalDateTime createdAt, LocalDateTime updatedAt) {
-		super();
-		this.id = id;
-		this.name = name;
-		this.minimumDuration = minimumDuration;
-		this.category = category;
-		this.active = active;
-		this.createdAt = createdAt;
-		this.updatedAt = updatedAt;
+    public Activity(
+            Long id,
+            String name,
+            Integer minimumDuration,
+            ActivityCategory category,
+            Boolean active,
+            LocalDate startDate,
+            Set<DayOfWeek> scheduledDays,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt) {
+
+        super();
+
+        this.id = id;
+        this.name = name;
+        this.minimumDuration = minimumDuration;
+        this.category = category;
+        this.active = active;
+        this.startDate = startDate;
+        this.scheduledDays = scheduledDays;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+	
+	public LocalDate getStartDate() {
+	    return startDate;
+	}
+
+	public void setStartDate(LocalDate startDate) {
+	    this.startDate = startDate;
 	}
 
 	public Long getId() {
@@ -135,6 +177,15 @@ public class Activity {
     @PreUpdate
     public void preUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+    
+    
+    public Set<DayOfWeek> getScheduledDays() {
+        return scheduledDays;
+    }
+
+    public void setScheduledDays(Set<DayOfWeek> scheduledDays) {
+        this.scheduledDays = scheduledDays;
     }
 
 	
