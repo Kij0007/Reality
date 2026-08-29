@@ -13,8 +13,10 @@ import com.reality.dto.SessionRequestDTO;
 import com.reality.dto.SessionResponseDTO;
 import com.reality.entity.Activity;
 import com.reality.entity.Session;
+import com.reality.entity.SessionBreak;
 import com.reality.exception.ResourceNotFoundException;
 import com.reality.repository.ActivityRepository;
+import com.reality.repository.SessionBreakRepository;
 import com.reality.repository.SessionRepository;
 import com.reality.services.SessionService;
 
@@ -23,11 +25,13 @@ public class SessionServiceImpl implements SessionService {
 
     private final SessionRepository sessionRepository;
     private final ActivityRepository activityRepository;
+    private final SessionBreakRepository sessionBreakRepository;
 
     public SessionServiceImpl(SessionRepository sessionRepository,
-                              ActivityRepository activityRepository) {
+                              ActivityRepository activityRepository,SessionBreakRepository sessionBreakRepository) {
         this.sessionRepository = sessionRepository;
         this.activityRepository = activityRepository;
+        this.sessionBreakRepository = sessionBreakRepository;
     }
 
     @Override
@@ -53,28 +57,91 @@ public class SessionServiceImpl implements SessionService {
     @Override
     public SessionResponseDTO stopSession(Long sessionId) {
 
-        Session session = sessionRepository.findById(sessionId)
+        // 1. Find session
+        Session session = sessionRepository
+                .findById(sessionId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "Session not found with id: " + sessionId));
+                                "Session not found with id: "
+                                        + sessionId));
 
+        // 2. Prevent stopping the same session twice
         if (session.getEndTime() != null) {
+
             throw new IllegalArgumentException(
                     "Session has already been stopped");
         }
 
-        LocalDateTime endTime = LocalDateTime.now();
+        // 3. Capture session end time
+        LocalDateTime endTime =
+                LocalDateTime.now();
 
         session.setEndTime(endTime);
 
-        long duration = Duration.between(
-                session.getStartTime(),
-                endTime
-        ).getSeconds();
+        // ------------------------------------------------
+        // 4. IF SESSION IS CURRENTLY ON BREAK,
+        //    CLOSE THAT BREAK AUTOMATICALLY
+        // ------------------------------------------------
 
-        session.setDuration(duration);
+        sessionBreakRepository
+                .findBySessionIdAndEndTimeIsNull(sessionId)
+                .ifPresent(activeBreak -> {
 
-        Session savedSession = sessionRepository.save(session);
+                    activeBreak.setEndTime(endTime);
+
+                    long breakDuration =
+                            Duration.between(
+                                    activeBreak.getStartTime(),
+                                    endTime)
+                                    .getSeconds();
+
+                    activeBreak.setDuration(
+                            breakDuration);
+
+                    sessionBreakRepository.save(
+                            activeBreak);
+                });
+
+        // ------------------------------------------------
+        // 5. CALCULATE TOTAL ELAPSED TIME
+        // ------------------------------------------------
+
+        long totalElapsedDuration =
+                Duration.between(
+                        session.getStartTime(),
+                        endTime)
+                        .getSeconds();
+
+        // ------------------------------------------------
+        // 6. CALCULATE TOTAL BREAK TIME
+        // ------------------------------------------------
+
+        long totalBreakDuration =
+                sessionBreakRepository
+                        .findBySessionId(sessionId)
+                        .stream()
+                        .filter(sessionBreak ->
+                                sessionBreak.getDuration() != null)
+                        .mapToLong(
+                                SessionBreak::getDuration)
+                        .sum();
+
+        // ------------------------------------------------
+        // 7. CALCULATE ACTUAL WORKING DURATION
+        // ------------------------------------------------
+
+        long activeDuration =
+                totalElapsedDuration
+                        - totalBreakDuration;
+
+        session.setDuration(activeDuration);
+
+        // ------------------------------------------------
+        // 8. SAVE SESSION
+        // ------------------------------------------------
+
+        Session savedSession =
+                sessionRepository.save(session);
 
         return mapToResponseDTO(savedSession);
     }
