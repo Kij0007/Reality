@@ -10,10 +10,32 @@ Local Windows execution recovered after an initial helper failure. A workspace-l
 
 ## Current status
 
-GitHub Actions run 37889405627 compiled the debug APK and passed the initial 17 JVM tests. Lint identified seven UI errors; observable locale formatting and resource lookups were corrected afterward. Combined compilation, expanded JVM tests, lint and emulator tests are being rerun for the corrected source. Final outcomes will be recorded before delivery; the initial run alone is not a passing final verification.
+GitHub Actions run [37894085355](https://github.com/Kij0007/Reality/actions/runs/37894085355), commit 732537b2bdba2a8cd30e74be09c40bb3a553dc1a, passed both jobs:
+
+| Check | Result |
+|---|---|
+| Gradle configuration and assembleDebug | PASS; real debug APK generated |
+| assembleDebugAndroidTest | PASS; instrumentation APK compiled |
+| JVM tests | PASS: 65 passed, 0 failures/errors, 1 opt-in live test skipped |
+| lintDebug | PASS: 0 errors, 28 warnings |
+| connectedDebugAndroidTest | PASS: 4 tests on Android API 35 x86_64 emulator |
+| Android Studio graphical sync | Not run; command-line Gradle configuration/build was verified |
+
+Tests cover all 18 API contracts, request bodies/statuses, error parsing, validation, timers/time zones, duplicate writes, configuration locking, saved forms, stale data, request cancellation, report filters, break controls, actual Hilt application startup, navigation and local form validation. Lint warnings concern newer dependency/SDK releases; the compatible SDK 36 toolchain is deliberately pinned rather than hiding warnings. Native screenshots and unsigned release minification are checked in the final verification workflow.
+
+Local Windows assembleDebug was attempted with JDK 21, including a shorter source path and two workers. Its native AAPT2 linker exited unexpectedly without an error message; the independent Linux Android build and emulator tests above passed. The failure is recorded rather than reported as a successful local build.
 
 ## Backend end-to-end limitations
 
-The local Spring Boot server at http://localhost:8081 is reachable after execution recovered. An opt-in integration test exercises all 18 endpoints using uniquely named verification records and API cleanup. Set REALITY_TEST_BASE_URL to opt in; ordinary CI tests do not write to a live database. MockWebServer fixtures are confined to tests; runtime repositories use real Retrofit APIs with no mock fallback.
+The opt-in LiveBackendFlowTest was compiled and executed using the Android client's actual Retrofit interfaces and DTOs in a temporary JVM verification harness. Connection to both localhost:8081 and 127.0.0.1:8081 was refused before the first create request could reach Spring Boot. No test records were created. Real PostgreSQL persistence, server break/stop behavior and server-generated reports could therefore not be verified in this run.
+
+The test exercises all 18 endpoints, waits for a genuine one-minute session, and cleans up uniquely named records through APIs when a server is available. To run it from the Android project in PowerShell:
+
+```powershell
+$env:REALITY_TEST_BASE_URL = 'http://localhost:8081/'
+.\gradlew.bat testDebugUnitTest --tests 'com.reality.android.integration.LiveBackendFlowTest'
+```
+
+Ordinary CI tests skip this opt-in live test and do not write to a database. MockWebServer fixtures are confined to tests; runtime repositories use real Retrofit APIs without a mock fallback. Start the complete backend, confirm its activities API, and repeat the live flow for deployment verification.
 
 BACKEND_INTEGRATION.md identifies the existing main-branch backend limitations separately. A passing Android build does not repair or validate an unavailable Spring Boot deployment.
