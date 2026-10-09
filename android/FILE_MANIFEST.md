@@ -24,6 +24,7 @@ app/src/main/java/com/reality/android/core/util/RealityTime.kt
 app/src/main/java/com/reality/android/data/remote/api/RealityApis.kt
 app/src/main/java/com/reality/android/data/remote/dto/RealityDtos.kt
 app/src/main/java/com/reality/android/data/repository/RealityRepositories.kt
+app/src/main/java/com/reality/android/data/repository/SettingsReadRecovery.kt
 app/src/main/java/com/reality/android/data/repository/SettingsRepository.kt
 app/src/main/java/com/reality/android/di/NetworkModule.kt
 app/src/main/java/com/reality/android/MainActivity.kt
@@ -63,6 +64,7 @@ app/src/main/res/xml/data_extraction_rules.xml
 app/src/test/java/com/reality/android/core/NetworkSafetyTest.kt
 app/src/test/java/com/reality/android/core/RealityRulesTest.kt
 app/src/test/java/com/reality/android/data/ApiContractTest.kt
+app/src/test/java/com/reality/android/data/SettingsReadRecoveryTest.kt
 app/src/test/java/com/reality/android/integration/LiveBackendFlowTest.kt
 app/src/test/java/com/reality/android/ui/activities/ActivitiesUiStateTest.kt
 app/src/test/java/com/reality/android/ui/activities/ActivityDetailViewModelTest.kt
@@ -79,6 +81,7 @@ app/src/test/java/com/reality/android/ui/tracking/TrackingViewModelTest.kt
 BACKEND_INTEGRATION.md
 build.gradle.kts
 FEATURE_PARITY.md
+FILE_MANIFEST.md
 gradle.properties
 gradle/libs.versions.toml
 gradle/wrapper/gradle-wrapper.jar
@@ -86,9 +89,9 @@ gradle/wrapper/gradle-wrapper.properties
 gradlew
 gradlew.bat
 README.md
+scripts/verify-emulator.sh
 settings.gradle.kts
 SETUP.md
 TROUBLESHOOTING.md
 VERIFICATION.md
-FILE_MANIFEST.md
 ```

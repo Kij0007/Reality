@@ -96,15 +96,7 @@ jobs:
           profile: pixel_2
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: |
-            cd android
-            test_status=0
-            ./gradlew --no-daemon connectedDebugAndroidTest || test_status=$?
-            mkdir -p app/build/reports/androidTests/screenshots
-            for screen in home settings activities tracking form more; do
-              adb exec-out run-as com.reality.android.debug cat files/verification-$screen.png > app/build/reports/androidTests/screenshots/$screen.png || true
-            done
-            exit $test_status
+          script: bash android/scripts/verify-emulator.sh
       - name: Upload emulator test reports
         if: always()
         uses: actions/upload-artifact@v4
