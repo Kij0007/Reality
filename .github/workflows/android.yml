@@ -33,8 +33,8 @@ jobs:
         run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
       - name: Verify Gradle wrapper integrity
         run: echo "81a82aaea5abcc8ff68b3dfcb58b3c3c429378efd98e7433460610fecd7ae45f  gradle/wrapper/gradle-wrapper.jar" | sha256sum --check
-      - name: Build debug APK, unit tests, and lint
-        run: ./gradlew --no-daemon assembleDebug testDebugUnitTest lintDebug
+      - name: Build app and UI test APKs, unit tests, and lint
+        run: ./gradlew --no-daemon assembleDebug assembleDebugAndroidTest testDebugUnitTest lintDebug
       - name: Upload debug APK
         if: success()
         uses: actions/upload-artifact@v4

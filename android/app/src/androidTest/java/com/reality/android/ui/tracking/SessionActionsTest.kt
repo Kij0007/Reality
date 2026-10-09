@@ -1,11 +1,8 @@
 package com.reality.android.ui.tracking
 
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.test.assertDoesNotExist
-import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
 import com.reality.android.data.remote.dto.BreakDto
 import com.reality.android.data.remote.dto.SessionDto
 import org.junit.Assert.assertEquals
