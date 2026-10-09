@@ -103,8 +103,10 @@ android/
 ├── gradle/libs.versions.toml
 ├── gradle.properties
 ├── settings.gradle.kts, build.gradle.kts, gradlew, gradlew.bat
+├── scripts/verify-emulator.sh
 ├── BACKEND_INTEGRATION.md
 ├── FEATURE_PARITY.md
+├── FILE_MANIFEST.md
 ├── SETUP.md
 ├── TROUBLESHOOTING.md
 └── VERIFICATION.md
