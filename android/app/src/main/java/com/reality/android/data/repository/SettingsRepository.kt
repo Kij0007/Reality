@@ -10,7 +10,6 @@ import com.reality.android.BuildConfig
 import com.reality.android.core.network.normalizeBackendUrl
 import com.reality.android.core.network.MutationGate
 import dagger.hilt.android.qualifiers.ApplicationContext
-import java.io.IOException
 import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -45,10 +44,7 @@ class SettingsRepository @Inject constructor(
     val currentSettings: StateFlow<AppSettings> = current.asStateFlow()
 
     private val storedSettings = dataStore.data
-        .catch { error ->
-            if (error is IOException) emit(androidx.datastore.preferences.core.emptyPreferences())
-            else throw error
-        }
+        .retrySettingsReads()
         .map { preferences ->
             val defaultUrl = normalizeBackendUrl(BuildConfig.BACKEND_BASE_URL, BuildConfig.DEBUG)
             AppSettings(
