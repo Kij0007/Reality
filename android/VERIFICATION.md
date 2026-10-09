@@ -10,18 +10,23 @@ Local Windows execution recovered after an initial helper failure. A workspace-l
 
 ## Current status
 
-GitHub Actions run [37894085355](https://github.com/Kij0007/Reality/actions/runs/37894085355), commit 732537b2bdba2a8cd30e74be09c40bb3a553dc1a, passed both jobs:
+GitHub Actions run [37898966489](https://github.com/Kij0007/Reality/actions/runs/37898966489), code commit 91888b1de829b869d6c557de288ca214b2dd8371, passed both the build and emulator jobs:
 
 | Check | Result |
 |---|---|
 | Gradle configuration and assembleDebug | PASS; real debug APK generated |
 | assembleDebugAndroidTest | PASS; instrumentation APK compiled |
-| JVM tests | PASS: 65 passed, 0 failures/errors, 1 opt-in live test skipped |
-| lintDebug | PASS: 0 errors, 28 warnings |
-| connectedDebugAndroidTest | PASS: 4 tests on Android API 35 x86_64 emulator |
+| JVM tests | PASS: 67 passed, 0 failures/errors, 1 opt-in live test skipped |
+| lintDebug | PASS: 0 errors, 27 warnings |
+| assembleRelease with R8/resource shrinking | PASS; unsigned compile check with a temporary HTTPS URL, no production service contacted |
+| connectedDebugAndroidTest | PASS: 4 tests on Android API 35 x86_64 Pixel 2 emulator |
+| Native screenshots | PASS: 6 valid 1080 x 1920 PNG captures, visually inspected |
+| Debug APK signature | PASS: Android APK Signature Scheme v2 verified |
 | Android Studio graphical sync | Not run; command-line Gradle configuration/build was verified |
 
-Tests cover all 18 API contracts, request bodies/statuses, error parsing, validation, timers/time zones, duplicate writes, configuration locking, saved forms, stale data, request cancellation, report filters, break controls, actual Hilt application startup, navigation and local form validation. Lint warnings concern newer dependency/SDK releases; the compatible SDK 36 toolchain is deliberately pinned rather than hiding warnings. Native screenshots and unsigned release minification are checked in the final verification workflow.
+Tests cover all 18 API contracts, request bodies/statuses, error parsing, validation, timers/time zones, duplicate writes, configuration locking, settings-disk recovery, saved forms, stale data, request cancellation, report filters, break controls, actual Hilt application startup, navigation and local form validation. Of the 27 lint warnings, 26 concern newer dependency/SDK releases and one flags intentional debug-only cleartext HTTP for emulator/LAN development. Release blocks cleartext. The compatible SDK 36 toolchain is deliberately pinned; no lint baseline or warning suppression is used.
+
+The independently openable source archive contains all 89 files, includes the wrapper JAR and executable Unix wrapper, and excludes build caches, machine-specific SDK paths and private signing files. Six native screenshots were exported during instrumentation before AGP uninstalled the debug app; CI validated their PNG structure. Home, Activities, Create Activity, Track, More and Settings were visually inspected in the offline/form state. These captures do not represent successful real database operations or a visual test of every populated screen.
 
 Local Windows assembleDebug was attempted with JDK 21, including a shorter source path and two workers. Its native AAPT2 linker exited unexpectedly without an error message; the independent Linux Android build and emulator tests above passed. The failure is recorded rather than reported as a successful local build.
 
