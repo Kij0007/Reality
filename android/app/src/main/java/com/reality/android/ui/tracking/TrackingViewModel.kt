@@ -41,12 +41,13 @@ data class TrackingUiState(
     val activitiesError: String? = null,
     val notice: Int? = null,
     val zoneId: String = "Asia/Kolkata",
+    val activitiesKnown: Boolean = false,
 ) {
     val visible get() = sessions.filter {
         status == SessionStatus.ALL || sessionStatus(it, breaks[it.id]) == status
     }.sortedByDescending { it.startTime }
     val open get() = allSessions.filter { it.endTime == null }.sortedByDescending { it.startTime }
-    val canStart get() = activityId != null && !loading && !busy && sessionsKnown &&
+    val canStart get() = activityId != null && !loading && !busy && sessionsKnown && activitiesKnown &&
         activities.any { it.id == activityId && it.active != false } &&
         allSessions.none { it.activityId == activityId && it.endTime == null }
 }
@@ -106,7 +107,7 @@ class TrackingViewModel @Inject constructor(
     private suspend fun fetch() = coroutineScope {
         val filter = mutable.value
         mutable.update {
-            it.copy(loading = true, error = null, activitiesError = null, sessionsKnown = false)
+            it.copy(loading = true, error = null, activitiesError = null, sessionsKnown = false, activitiesKnown = false)
         }
         val zone = settings.settings.first().serverZoneId
         val activityResult = async { activities.list() }
@@ -125,7 +126,7 @@ class TrackingViewModel @Inject constructor(
             }
         }
         when (val result = activityResult.await()) {
-            is ApiResult.Success -> mutable.update { it.copy(activities = result.data, zoneId = zone) }
+            is ApiResult.Success -> mutable.update { it.copy(activities = result.data, zoneId = zone, activitiesKnown = true) }
             is ApiResult.Failure -> mutable.update { it.copy(activitiesError = result.error.message, zoneId = zone) }
         }
         when (val result = allResult.await()) {
@@ -195,7 +196,9 @@ class TrackingViewModel @Inject constructor(
 
     private fun act(session: SessionDto, action: SessionAction, description: String? = null) {
         val current = mutable.value
-        if (current.loading || current.busy || !permitsAction(action, session, current.breaks[session.id])) return
+        val latestSession = current.allSessions.firstOrNull { it.id == session.id } ?: return
+        if (current.loading || current.busy || !current.sessionsKnown ||
+            !permitsAction(action, latestSession, current.breaks[session.id])) return
         if (description != null && description.length > 255) return
         if (!gate.tryLock()) return
         mutable.update { it.copy(busy = true, error = null) }

@@ -62,7 +62,10 @@
     <string name="wf_view_sessions">View sessions</string>
     <string name="wf_progress">Progress and streak</string>
     <string name="wf_report">Monthly report</string>
-    <string name="wf_sessions_count">%1$d recorded sessions</string>
+    <plurals name="wf_sessions_count">
+        <item quantity="one">%1$d recorded session</item>
+        <item quantity="other">%1$d recorded sessions</item>
+    </plurals>
     <string name="wf_delete_activity">Delete activity</string>
     <string name="wf_verify_sessions_before_actions">Refresh session data before starting or deleting this activity.</string>
     <string name="wf_stop_before_delete">Stop this activity’s open sessions before deleting it.</string>

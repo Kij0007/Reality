@@ -1,10 +1,12 @@
 package com.reality.android.ui.navigation
 
 import androidx.compose.foundation.layout.*
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,6 +15,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -31,26 +35,29 @@ private data class MainDestination(val route: Any, val label: Int, val icon: Ima
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RealityNavigation() {
+fun RealityNavigation(model: NavigationViewModel = hiltViewModel()) {
+    val writing by model.writing.collectAsStateWithLifecycle()
+    // Keep the owning ViewModel alive until a server write has a confirmed result.
+    BackHandler(enabled = writing) { }
     val nav = rememberNavController()
     val current by nav.currentBackStackEntryAsState()
     val destination = current?.destination
     val destinations = remember {
         listOf(
             MainDestination(Home, R.string.nav_home, Icons.Default.Home),
-            MainDestination(Activities, R.string.nav_activities, Icons.Default.List),
+            MainDestination(Activities, R.string.nav_activities, Icons.AutoMirrored.Filled.List),
             MainDestination(Tracking(), R.string.nav_track, Icons.Default.PlayArrow),
             MainDestination(Reports(), R.string.nav_reports, Icons.Default.DateRange),
             MainDestination(More, R.string.nav_more, Icons.Default.MoreVert)
         )
     }
     fun go(route: Any) {
-        if (nav.currentBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED) {
+        if (!model.writing.value && nav.currentBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED) {
             nav.navigate(route) { launchSingleTop = true }
         }
     }
     fun top(route: Any) {
-        if (nav.currentBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED) {
+        if (!model.writing.value && nav.currentBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED) {
             nav.navigate(route) {
                 popUpTo(nav.graph.findStartDestination().id) { saveState = true }
                 launchSingleTop = true
@@ -78,24 +85,34 @@ fun RealityNavigation() {
         val rail = maxWidth >= 840.dp
         Scaffold(
             topBar = {
+                Column {
                 TopAppBar(
                     title = { Text(stringResource(title)) },
                     navigationIcon = {
-                        if (!isMain) IconButton(onClick = { nav.popBackStack() }) {
+                        if (!isMain) IconButton(enabled = !writing, onClick = {
+                            if (!model.writing.value) nav.popBackStack()
+                        }) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.go_back))
                         }
                     },
                     actions = {
-                        if (destination?.hasRoute<Settings>() != true) IconButton(onClick = { go(Settings) }) {
+                        if (destination?.hasRoute<Settings>() != true) IconButton(enabled = !writing, onClick = { go(Settings) }) {
                             Icon(Icons.Default.Settings, stringResource(R.string.nav_settings))
                         }
                     }
                 )
+                if (writing) {
+                    LinearProgressIndicator(Modifier.fillMaxWidth())
+                    Text(stringResource(R.string.wait_for_server), Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelMedium)
+                }
+                }
             },
             bottomBar = {
                 if (!rail) NavigationBar {
                     destinations.forEach { item ->
                         NavigationBarItem(
+                            enabled = !writing,
                             selected = selected(destination, item.route),
                             onClick = { top(item.route) },
                             icon = { Icon(item.icon, null) },
@@ -109,6 +126,7 @@ fun RealityNavigation() {
                 if (rail) NavigationRail {
                     destinations.forEach { item ->
                         NavigationRailItem(
+                            enabled = !writing,
                             selected = selected(destination, item.route),
                             onClick = { top(item.route) },
                             icon = { Icon(item.icon, null) },

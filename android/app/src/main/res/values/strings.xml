@@ -43,4 +43,5 @@
     <string name="settings_read_failure">Preferences could not be saved. Try again.</string>
     <string name="settings_about">About Reality</string>
     <string name="settings_about_description">Native Android client for your existing Spring Boot application. Records are saved on the server. Finishing a session records its duration; live timers are estimates. This backend has no login system, so protect your deployment before sharing it.</string>
+    <string name="wait_for_server">Saving changes. Please wait for the server response.</string>
 </resources>

@@ -39,12 +39,17 @@ class ReportsViewModel @Inject constructor(
     private val _state = MutableStateFlow(ReportsUiState())
     val state = _state.asStateFlow()
     private var loadJob: Job? = null
+    private var backendUrl: String? = null
 
     init {
         viewModelScope.launch {
-            settings.settings.map { it.backendUrl to it.serverZoneId }.distinctUntilChanged().collect { (_, zone) ->
+            settings.settings.map { it.backendUrl to it.serverZoneId }.distinctUntilChanged().collect { (url, zone) ->
+                loadJob?.cancel()
+                if (backendUrl != null && backendUrl != url) _state.value = ReportsUiState()
+                backendUrl = url
                 val month = savedState.get<String>("reportMonth")?.let { runCatching { YearMonth.parse(it) }.getOrNull() }
                     ?: YearMonth.from(today(zone))
+                if (_state.value.month != month) _state.update { it.copy(report = RemoteValue()) }
                 _state.update { it.copy(month = month, serverZoneId = zone) }
                 restart()
             }

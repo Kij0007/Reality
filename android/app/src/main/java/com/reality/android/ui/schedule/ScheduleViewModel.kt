@@ -32,14 +32,17 @@ class ScheduleViewModel @Inject constructor(
     private val _state = MutableStateFlow(ScheduleUiState())
     val state = _state.asStateFlow()
     private var loadJob: Job? = null
+    private var backendUrl: String? = null
 
     init {
         viewModelScope.launch {
-            settings.settings.map { it.backendUrl to it.serverZoneId }.distinctUntilChanged().collect { (_, zone) ->
+            settings.settings.map { it.backendUrl to it.serverZoneId }.distinctUntilChanged().collect { (url, zone) ->
+                loadJob?.cancel()
+                if (backendUrl != null && backendUrl != url) _state.value = ScheduleUiState()
+                backendUrl = url
                 val selected = savedState.get<String>("scheduleDate")?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
                     ?: today(zone)
                 _state.update { it.copy(date = selected, serverZoneId = zone) }
-                loadJob?.cancel()
                 load()
             }
         }

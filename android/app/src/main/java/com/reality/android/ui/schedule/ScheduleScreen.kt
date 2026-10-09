@@ -5,6 +5,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -15,7 +17,6 @@ import com.reality.android.core.util.isScheduled
 import com.reality.android.ui.progress.*
 import java.time.DayOfWeek
 import java.time.format.TextStyle
-import java.util.Locale
 
 @Composable
 fun ScheduleScreen(
@@ -24,6 +25,7 @@ fun ScheduleScreen(
     onTrack: (Long) -> Unit,
     viewModel: ScheduleViewModel = hiltViewModel()
 ) {
+    val locale = LocalConfiguration.current.locales[0]
     val state by viewModel.state.collectAsStateWithLifecycle()
     RefreshOnResume(viewModel::refresh)
     InsightsList(state.loading, viewModel::refresh) {
@@ -36,6 +38,9 @@ fun ScheduleScreen(
             }
         }
         state.error?.let { message -> item { InsightsError(message, state.loading, viewModel::refresh) } }
+        if (state.error != null && state.activities != null) item {
+            Text(stringResource(R.string.insights_stale_note), color = MaterialTheme.colorScheme.error)
+        }
         if (state.activities?.isEmpty() == true) item { Text(stringResource(R.string.insights_no_activities_instruction)) }
         items(state.activities.orEmpty().filterNot(::hasCompleteSchedule), key = { "repair-" + it.id }) {
             ScheduleRepair(it, onEdit)
@@ -54,7 +59,9 @@ fun ScheduleScreen(
                         scheduled.forEach { activity ->
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(activityName(activity), style = MaterialTheme.typography.titleSmall)
-                                Text(stringResource(R.string.insights_target_minutes, activity.minimumDuration ?: 0))
+                                Text(activity.minimumDuration?.let {
+                                    pluralStringResource(R.plurals.insights_target_minutes, it, it)
+                                } ?: stringResource(R.string.insights_target_unavailable))
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     TextButton(onClick = { onActivity(activity.id) }) { Text(stringResource(R.string.insights_details)) }
                                     TextButton(onClick = { onTrack(activity.id) }) { Text(stringResource(R.string.insights_track)) }
@@ -69,7 +76,7 @@ fun ScheduleScreen(
         if (!state.activities.isNullOrEmpty()) item { Text(stringResource(R.string.insights_repeat_schedules), style = MaterialTheme.typography.titleLarge) }
         items(state.activities.orEmpty(), key = { "rule-" + it.id }) { activity ->
             val days = activity.scheduledDays.orEmpty().mapNotNull { runCatching { DayOfWeek.valueOf(it) }.getOrNull() }
-                .sortedBy { it.value }.joinToString(", ") { it.getDisplayName(TextStyle.SHORT, Locale.getDefault()) }
+                .sortedBy { it.value }.joinToString(", ") { it.getDisplayName(TextStyle.SHORT, locale) }
             Card {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(activityName(activity), style = MaterialTheme.typography.titleMedium)

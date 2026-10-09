@@ -1,3 +1,5 @@
+import java.net.URI
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -10,6 +12,14 @@ val developmentUrl = providers.gradleProperty("BACKEND_BASE_URL").getOrElse("htt
 val productionUrl = providers.gradleProperty("PRODUCTION_BACKEND_BASE_URL")
     .orElse(providers.environmentVariable("PRODUCTION_BACKEND_BASE_URL")).getOrElse("")
 fun quoted(value: String) = "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
+fun validateBackend(value: String, production: Boolean) {
+    val uri = runCatching { URI(value) }.getOrNull()
+    require(uri != null && !uri.host.isNullOrBlank() && uri.userInfo == null &&
+        uri.rawQuery == null && uri.rawFragment == null &&
+        (uri.scheme == "https" || (!production && uri.scheme == "http")) && value.endsWith("/")) {
+        "Configure a complete backend URL ending in /, without credentials, a query or a fragment. Release requires HTTPS."
+    }
+}
 val signingPath = providers.environmentVariable("REALITY_KEYSTORE_PATH").orNull
 val signingStorePassword = providers.environmentVariable("REALITY_KEYSTORE_PASSWORD").orNull
 val signingAlias = providers.environmentVariable("REALITY_KEY_ALIAS").orNull
@@ -60,10 +70,11 @@ kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarg
 kapt { correctErrorTypes = true }
 tasks.matching { it.name == "preReleaseBuild" }.configureEach {
     doFirst {
-        require(productionUrl.startsWith("https://") && productionUrl.endsWith("/")) {
-            "Set PRODUCTION_BACKEND_BASE_URL to your real HTTPS backend URL ending in /."
-        }
+        validateBackend(productionUrl, production = true)
     }
+}
+tasks.matching { it.name == "preDebugBuild" }.configureEach {
+    doFirst { validateBackend(developmentUrl, production = false) }
 }
 dependencies {
     implementation(platform(libs.compose.bom))

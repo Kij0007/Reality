@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.reality.android.BuildConfig
 import com.reality.android.core.network.normalizeBackendUrl
+import com.reality.android.core.network.MutationGate
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.IOException
 import java.time.ZoneId
@@ -30,13 +31,18 @@ data class AppSettings(
 private val Context.realityDataStore: DataStore<Preferences> by preferencesDataStore(name = "reality_settings")
 
 @Singleton
-class SettingsRepository @Inject constructor(@ApplicationContext context: Context) {
+class SettingsRepository @Inject constructor(
+    @ApplicationContext context: Context,
+    private val mutations: MutationGate,
+) {
     private val dataStore = context.applicationContext.realityDataStore
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val loaded = CompletableDeferred<Unit>()
     private val backendKey = stringPreferencesKey("backend_url")
     private val zoneKey = stringPreferencesKey("server_zone")
     private val themeKey = stringPreferencesKey("theme")
+    private val current = MutableStateFlow(AppSettings())
+    val currentSettings: StateFlow<AppSettings> = current.asStateFlow()
 
     private val storedSettings = dataStore.data
         .catch { error ->
@@ -56,10 +62,12 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
                 }.getOrDefault(ThemePreference.SYSTEM),
             )
         }
-        .onEach { loaded.complete(Unit) }
+        .onEach {
+            current.value = it
+            loaded.complete(Unit)
+        }
 
-    val currentSettings: StateFlow<AppSettings> =
-        storedSettings.stateIn(scope, SharingStarted.Eagerly, AppSettings())
+    init { storedSettings.launchIn(scope) }
 
     val settings: Flow<AppSettings> = flow {
         loaded.await()
@@ -70,13 +78,21 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
 
     suspend fun saveBackendUrl(url: String) {
         val normalized = normalizeBackendUrl(url, BuildConfig.DEBUG)
-        dataStore.edit { it[backendKey] = normalized }
+        mutations.changeConfiguration {
+            awaitLoaded()
+            dataStore.edit { it[backendKey] = normalized }
+            currentSettings.first { it.backendUrl == normalized }
+        }
     }
 
     suspend fun saveServerZone(id: String) {
         val normalized = id.trim()
         require(runCatching { ZoneId.of(normalized) }.isSuccess) { "Enter a valid server timezone, such as Asia/Kolkata." }
-        dataStore.edit { it[zoneKey] = normalized }
+        mutations.changeConfiguration {
+            awaitLoaded()
+            dataStore.edit { it[zoneKey] = normalized }
+            currentSettings.first { it.serverZoneId == normalized }
+        }
     }
 
     suspend fun saveTheme(theme: ThemePreference) {

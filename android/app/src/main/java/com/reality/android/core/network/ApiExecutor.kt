@@ -49,7 +49,7 @@ class ApiExecutor @Inject constructor(private val json: Json) {
 
     private fun httpError(response: Response<*>, mutation: Boolean): AppError {
         val status = response.code()
-        val raw = response.errorBody()?.use { it.string() }.orEmpty()
+        val raw = runCatching { response.errorBody()?.use { it.string() } }.getOrNull().orEmpty()
         val structured = runCatching { json.decodeFromString<ErrorDto>(raw) }.getOrNull()
         // Never display a server stack trace or HTML error document.
         val readable = structured?.message?.trim()?.takeIf {

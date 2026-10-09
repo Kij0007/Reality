@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -11,7 +12,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.reality.android.R
 import com.reality.android.core.util.formatDuration
 import com.reality.android.ui.progress.*
-import java.util.Locale
 
 @Composable
 fun ReportsScreen(
@@ -19,6 +19,7 @@ fun ReportsScreen(
     onEdit: (Long) -> Unit,
     viewModel: ReportsViewModel = hiltViewModel()
 ) {
+    val locale = LocalConfiguration.current.locales[0]
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(initialActivityId) { viewModel.initialize(initialActivityId) }
     RefreshOnResume(viewModel::refresh)
@@ -32,6 +33,9 @@ fun ReportsScreen(
             }
         }
         state.error?.let { message -> item { InsightsError(message, state.loading, viewModel::refresh) } }
+        if (state.error != null && state.report.data != null) item {
+            Text(stringResource(R.string.insights_stale_note), color = MaterialTheme.colorScheme.error)
+        }
         if (state.selectionMissing) item { Text(stringResource(R.string.insights_activity_unavailable), color = MaterialTheme.colorScheme.error) }
         if (state.activitiesLoaded && state.activities.isEmpty()) item { Text(stringResource(R.string.insights_no_activities_instruction)) }
         state.selected?.let { activity -> if (!hasCompleteSchedule(activity)) item { ScheduleRepair(activity, onEdit) } }
@@ -48,7 +52,7 @@ fun ReportsScreen(
                 Card {
                     Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(stringResource(R.string.insights_completion), style = MaterialTheme.typography.titleMedium)
-                        Text(String.format(Locale.getDefault(), "%.2f%%", report.completionPercentage), style = MaterialTheme.typography.headlineLarge)
+                        Text(String.format(locale, "%.2f%%", report.completionPercentage), style = MaterialTheme.typography.headlineLarge)
                         LinearProgressIndicator(
                             progress = { (report.completionPercentage / 100.0).toFloat().let { if (it.isFinite()) it.coerceIn(0f, 1f) else 0f } },
                             modifier = Modifier.fillMaxWidth()

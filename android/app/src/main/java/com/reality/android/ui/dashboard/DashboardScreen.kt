@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -27,7 +28,8 @@ fun DashboardScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     RefreshOnResume(viewModel::refresh)
     val scheduled = state.date?.let { date -> state.rows.filter { isScheduled(it.activity, date) } }.orEmpty()
-    val work = state.activities?.let { dashboardRecordedSeconds(state.rows) }
+    val snapshotCurrent = state.loadedDate == state.date && state.activityError == null
+    val work = state.activities?.takeIf { snapshotCurrent }?.let { dashboardRecordedSeconds(state.rows) }
     val allScheduledLoaded = scheduled.all { it.progress.isCurrent }
     InsightsList(state.loading, viewModel::refresh) {
         item {
@@ -59,7 +61,7 @@ fun DashboardScreen(
                 StatTile(stringResource(R.string.insights_recorded_today), work?.let(::formatDuration) ?: stringResource(R.string.insights_unavailable), Modifier.weight(1f))
                 StatTile(
                     stringResource(R.string.insights_targets_today),
-                    if (state.activities == null || !allScheduledLoaded) stringResource(R.string.insights_unavailable)
+                    if (state.activities == null || !snapshotCurrent || !allScheduledLoaded) stringResource(R.string.insights_unavailable)
                     else stringResource(R.string.insights_fraction, scheduled.count { it.progress.data?.completed == true }, scheduled.size),
                     Modifier.weight(1f)
                 )
@@ -108,7 +110,7 @@ fun DashboardScreen(
                             Text(stringResource(if (day.completed) R.string.insights_target_completed else R.string.insights_target_pending))
                         }
                         row.progress.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                        row.streak.data?.let { Text(stringResource(R.string.insights_streak_days, it.currentStreak)) }
+                        row.streak.data?.let { Text(pluralStringResource(R.plurals.insights_streak_days, it.currentStreak, it.currentStreak)) }
                         row.streak.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Button(onClick = { onTrack(activity.id) }) { Text(stringResource(R.string.insights_track)) }

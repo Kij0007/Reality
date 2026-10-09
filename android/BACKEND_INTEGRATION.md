@@ -7,32 +7,32 @@ Revision: 09a7660d023c8e6d8a7c681c26daf7540d04ed18 (main at inspection).
 
 All six controllers, all ten DTOs, three entities, enum, three repositories, six service interfaces/implementations, exception handlers, Maven dependencies and application configuration were inspected. No pagination, query parameters, authentication, Spring Security or CORS policy exists in this revision. Native Android does not require browser CORS changes.
 
-**The current GitHub tree contains no HTML/CSS/JavaScript frontend files.** The web frontend generated and tested earlier in this same task is the behavioral reference for parity. Its currently installed local copy could not be freshly read because the Windows execution environment failed. The Android contract is independently verified against the GitHub backend, with no guessed endpoint.
+**The inspected GitHub main tree contains no HTML/CSS/JavaScript frontend files.** The installed web frontend at D:/Commitment_tracker/reality/src/main/resources/static was inspected after local execution recovered. Its api.js calls all 18 endpoints below; its dashboard, activity, schedule, session, progress and report workflows are the behavioral reference for native feature parity. The Android contract was also independently verified against the GitHub backend.
 
 ## Complete API inventory
 
 All paths are appended to the configured base URL (including a configured context path). All calls are unauthenticated in the existing contract. JSON writes send application/json. Successful activity deletion ignores the response body because Spring may label its plain string as JSON; successful session deletion has no body.
 
-| Android feature | Controller | Method | Endpoint | Request | Response | Success | Repository operation |
-|---|---|---|---|---|---|---|---|
-| Activity list | ActivityController | GET | activities | none | List<ActivityDto> | 200 | ActivityRepository.list |
-| Activity details/edit load | ActivityController | GET | activities/{id} | none | ActivityDto | 200 | ActivityRepository.get |
-| Create activity/schedule | ActivityController | POST | activities | ActivityRequest | ActivityDto | 201 | ActivityRepository.create |
-| Edit activity/schedule | ActivityController | PUT | activities/{id} | ActivityRequest | ActivityDto | 200 | ActivityRepository.update |
-| Remove activity | ActivityController | DELETE | activities/{id} | none | plain text ignored | 200 | ActivityRepository.delete |
-| Start tracking | SessionController | POST | api/sessions/start | SessionRequest | SessionDto | 201 | SessionRepository.start |
-| Finish tracking | SessionController | PUT | api/sessions/{id}/stop | none | SessionDto | 200 | SessionRepository.stop |
-| All history/open sessions | SessionController | GET | api/sessions | none | List<SessionDto> | 200 | SessionRepository.list |
-| Session details | SessionController | GET | api/sessions/{id} | none | SessionDto | 200 | SessionRepository.get |
-| Activity history filter | SessionController | GET | api/sessions/activity/{activityId} | none | List<SessionDto> | 200 | SessionRepository.forActivity |
-| Day history filter | SessionController | GET | api/sessions/activity/{activityId}/date/{date} | none | SessionDayDto | 200 | SessionRepository.forDay |
-| Delete session | SessionController | DELETE | api/sessions/{id} | none | empty | 204 | SessionRepository.delete |
-| Take break | SessionBreakController | POST | api/sessions/{sessionId}/break | optional BreakRequest | BreakDto | 201 | SessionRepository.startBreak |
-| Resume work | SessionBreakController | PUT | api/sessions/{sessionId}/resume | none | BreakDto | 200 | SessionRepository.resume |
-| Break history/state | SessionBreakController | GET | api/sessions/{sessionId}/breaks | none | List<BreakDto> | 200 | SessionRepository.breaks |
-| Daily target/progress | DailyProgressController | GET | api/daily-progress/activity/{activityId}/date/{date} | none | DailyProgressDto | 200 | ProgressRepository.day |
-| Current streak | StreakController | GET | api/streaks/activity/{activityId} | none | StreakDto | 200 | ProgressRepository.streak |
-| Monthly report | ReportController | GET | api/reports/activity/{activityId}/month/{month} | none | MonthlyReportDto | 200 | ReportRepository.month |
+| Android feature | Controller | Method | Endpoint | Request | Response | Success | Repository operation | Android API method |
+|---|---|---|---|---|---|---|---|---|
+| Activity list | ActivityController | GET | activities | none | List<ActivityDto> | 200 | ActivityRepository.list | ActivityApi.list |
+| Activity details/edit load | ActivityController | GET | activities/{id} | none | ActivityDto | 200 | ActivityRepository.get | ActivityApi.get |
+| Create activity/schedule | ActivityController | POST | activities | ActivityRequest | ActivityDto | 201 | ActivityRepository.create | ActivityApi.create |
+| Edit activity/schedule | ActivityController | PUT | activities/{id} | ActivityRequest | ActivityDto | 200 | ActivityRepository.update | ActivityApi.update |
+| Remove activity | ActivityController | DELETE | activities/{id} | none | plain text ignored | 200 | ActivityRepository.delete | ActivityApi.delete |
+| Start tracking | SessionController | POST | api/sessions/start | SessionRequest | SessionDto | 201 | SessionRepository.start | SessionApi.start |
+| Finish tracking | SessionController | PUT | api/sessions/{id}/stop | none | SessionDto | 200 | SessionRepository.stop | SessionApi.stop |
+| All history/open sessions | SessionController | GET | api/sessions | none | List<SessionDto> | 200 | SessionRepository.list | SessionApi.list |
+| Session details | SessionController | GET | api/sessions/{id} | none | SessionDto | 200 | SessionRepository.get | SessionApi.get |
+| Activity history filter | SessionController | GET | api/sessions/activity/{activityId} | none | List<SessionDto> | 200 | SessionRepository.forActivity | SessionApi.forActivity |
+| Day history filter | SessionController | GET | api/sessions/activity/{activityId}/date/{date} | none | SessionDayDto | 200 | SessionRepository.forDay | SessionApi.forDay |
+| Delete session | SessionController | DELETE | api/sessions/{id} | none | empty | 204 | SessionRepository.delete | SessionApi.delete |
+| Take break | SessionBreakController | POST | api/sessions/{sessionId}/break | optional BreakRequest | BreakDto | 201 | SessionRepository.startBreak | SessionBreakApi.start |
+| Resume work | SessionBreakController | PUT | api/sessions/{sessionId}/resume | none | BreakDto | 200 | SessionRepository.resume | SessionBreakApi.resume |
+| Break history/state | SessionBreakController | GET | api/sessions/{sessionId}/breaks | none | List<BreakDto> | 200 | SessionRepository.breaks | SessionBreakApi.list |
+| Daily target/progress | DailyProgressController | GET | api/daily-progress/activity/{activityId}/date/{date} | none | DailyProgressDto | 200 | ProgressRepository.day | DailyProgressApi.day |
+| Current streak | StreakController | GET | api/streaks/activity/{activityId} | none | StreakDto | 200 | ProgressRepository.streak | StreakApi.get |
+| Monthly report | ReportController | GET | api/reports/activity/{activityId}/month/{month} | none | MonthlyReportDto | 200 | ReportRepository.month | ReportApi.month |
 
 All IDs are server-issued Long path values. There are no query parameters. Date paths are yyyy-MM-dd; month paths are yyyy-MM. Retrofit interfaces in data/remote/api implement these exact routes; screen ViewModels call the corresponding repository operations above, not Retrofit directly.
 

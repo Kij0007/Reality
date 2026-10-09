@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -34,6 +35,9 @@ fun ProgressScreen(
             }
         }
         state.error?.let { message -> item { InsightsError(message, state.loading, viewModel::refresh) } }
+        if (state.error != null && (state.progress.data != null || state.sessions.data != null || state.streak.data != null)) item {
+            Text(stringResource(R.string.insights_stale_note), color = MaterialTheme.colorScheme.error)
+        }
         if (state.selectionMissing) item { Text(stringResource(R.string.insights_activity_unavailable), color = MaterialTheme.colorScheme.error) }
         if (state.activitiesLoaded && state.activities.isEmpty()) item { Text(stringResource(R.string.insights_no_activities_instruction)) }
         state.selected?.let { activity ->
@@ -45,7 +49,7 @@ fun ProgressScreen(
                         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Text(activityName(activity), style = MaterialTheme.typography.titleLarge)
                             Text(formatDuration(day.totalDuration), style = MaterialTheme.typography.headlineLarge)
-                            Text(stringResource(R.string.insights_target_minutes, day.minimumDuration))
+                            Text(pluralStringResource(R.plurals.insights_target_minutes, day.minimumDuration, day.minimumDuration))
                             LinearProgressIndicator(
                                 progress = { if (day.minimumDuration > 0) (day.totalDuration.toFloat() / (day.minimumDuration.toLong() * 60)).coerceIn(0f, 1f) else 0f },
                                 modifier = Modifier.fillMaxWidth()
@@ -62,7 +66,7 @@ fun ProgressScreen(
                 item {
                     Card {
                         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(stringResource(R.string.insights_streak_days, streak.currentStreak), style = MaterialTheme.typography.headlineSmall)
+                            Text(pluralStringResource(R.plurals.insights_streak_days, streak.currentStreak, streak.currentStreak), style = MaterialTheme.typography.headlineSmall)
                             Text(stringResource(R.string.insights_evaluated_through, formatDate(streak.lastEvaluatedDate)))
                             Text(stringResource(R.string.insights_streak_note), style = MaterialTheme.typography.bodySmall)
                         }

@@ -37,7 +37,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -71,7 +70,7 @@ fun TrackingScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
-    val context = LocalContext.current
+    val noticeText = state.notice?.let { stringResource(it) }
     val lifecycleOwner = LocalLifecycleOwner.current
     var breakSessionId by rememberSaveable { mutableStateOf<Long?>(null) }
     LaunchedEffect(initialActivityId) { viewModel.load(initialActivityId) }
@@ -84,8 +83,8 @@ fun TrackingScreen(
             }
         }
     }
-    LaunchedEffect(state.notice) {
-        state.notice?.let { snackbar.showSnackbar(context.getString(it)); viewModel.clearNotice() }
+    LaunchedEffect(noticeText) {
+        noticeText?.let { snackbar.showSnackbar(it); viewModel.clearNotice() }
     }
     PullToRefreshBox(isRefreshing = state.loading, onRefresh = viewModel::refresh, modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -113,11 +112,13 @@ fun TrackingScreen(
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.wf_all_activities)) },
                             onClick = { activityMenu = false; viewModel.selectActivity(null) },
+                            enabled = !state.loading && !state.busy,
                         )
                         state.activities.forEach { activity ->
                             DropdownMenuItem(
                                 text = { Text(activity.name ?: stringResource(R.string.wf_activity_number, activity.id)) },
                                 onClick = { activityMenu = false; viewModel.selectActivity(activity.id) },
+                                enabled = !state.loading && !state.busy,
                             )
                         }
                     }
@@ -158,7 +159,7 @@ fun TrackingScreen(
                         session = session,
                         activityName = state.activities.firstOrNull { it.id == session.activityId }?.name,
                         breaks = state.breaks[session.id], zoneId = state.zoneId,
-                        enabled = !state.loading && !state.busy,
+                        enabled = !state.loading && !state.busy && state.sessionsKnown,
                         breakError = state.breakErrors[session.id],
                         onDetail = { onSession(session.id) },
                         onBreak = { breakSessionId = session.id },
@@ -178,7 +179,7 @@ fun TrackingScreen(
                     session = session,
                     activityName = state.activities.firstOrNull { it.id == session.activityId }?.name,
                     breaks = state.breaks[session.id], zoneId = state.zoneId,
-                    enabled = !state.loading && !state.busy,
+                    enabled = !state.loading && !state.busy && state.sessionsKnown,
                     breakError = state.breakErrors[session.id],
                     onDetail = { onSession(session.id) },
                     onBreak = { breakSessionId = session.id },
@@ -190,7 +191,7 @@ fun TrackingScreen(
     }
     breakSessionId?.let { id ->
         BreakNoteDialog(
-            busy = state.busy, onDismiss = { breakSessionId = null },
+            busy = state.busy || state.loading, onDismiss = { breakSessionId = null },
             onConfirm = { note ->
                 breakSessionId = null
                 state.allSessions.firstOrNull { it.id == id }?.let { viewModel.startBreak(it, note) }
@@ -309,7 +310,7 @@ fun SessionDetailScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
-    val context = LocalContext.current
+    val noticeText = state.notice?.let { stringResource(it) }
     val owner = LocalLifecycleOwner.current
     var breakDialog by rememberSaveable(sessionId) { mutableStateOf(false) }
     var deleteDialog by rememberSaveable(sessionId) { mutableStateOf(false) }
@@ -321,8 +322,8 @@ fun SessionDetailScreen(
         }
     }
     LaunchedEffect(state.deleted) { if (state.deleted) onDeleted() }
-    LaunchedEffect(state.notice) {
-        state.notice?.let { snackbar.showSnackbar(context.getString(it)); viewModel.clearNotice() }
+    LaunchedEffect(noticeText) {
+        noticeText?.let { snackbar.showSnackbar(it); viewModel.clearNotice() }
     }
     PullToRefreshBox(isRefreshing = state.loading, onRefresh = viewModel::refresh, modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -369,13 +370,13 @@ fun SessionDetailScreen(
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
     }
     if (breakDialog) BreakNoteDialog(
-        busy = state.busy, onDismiss = { breakDialog = false },
+        busy = state.busy || state.loading, onDismiss = { breakDialog = false },
         onConfirm = { breakDialog = false; viewModel.startBreak(it) },
     )
     if (deleteDialog) DestructiveConfirmation(
         title = stringResource(R.string.wf_delete_session),
         body = stringResource(R.string.wf_session_delete_confirm),
-        busy = state.busy, onDismiss = { deleteDialog = false },
+        busy = state.busy || state.loading, onDismiss = { deleteDialog = false },
         onConfirm = { deleteDialog = false; viewModel.delete() },
     )
 }

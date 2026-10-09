@@ -3,7 +3,6 @@ package com.reality.android.ui.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.reality.android.core.network.ApiResult
-import com.reality.android.core.util.isScheduled
 import com.reality.android.core.util.today
 import com.reality.android.data.remote.dto.*
 import com.reality.android.data.repository.*
@@ -27,6 +26,7 @@ data class DashboardActivity(
 data class DashboardUiState(
     val loading: Boolean = true,
     val date: LocalDate? = null,
+    val loadedDate: LocalDate? = null,
     val serverZoneId: String = "",
     val activities: List<ActivityDto>? = null,
     val sessions: List<SessionDto>? = null,
@@ -50,12 +50,15 @@ class DashboardViewModel @Inject constructor(
     val state: StateFlow<DashboardUiState> = _state.asStateFlow()
     private var loadJob: Job? = null
     private var zoneId: String? = null
+    private var backendUrl: String? = null
 
     init {
         viewModelScope.launch {
-            settings.settings.map { it.backendUrl to it.serverZoneId }.distinctUntilChanged().collect { (_, zone) ->
+            settings.settings.map { it.backendUrl to it.serverZoneId }.distinctUntilChanged().collect { (url, zone) ->
                 zoneId = zone
                 loadJob?.cancel()
+                if (backendUrl != null && backendUrl != url) _state.value = DashboardUiState()
+                backendUrl = url
                 load()
             }
         }
@@ -68,7 +71,12 @@ class DashboardViewModel @Inject constructor(
         loadJob = viewModelScope.launch {
             val date = today(zone)
             val previous = _state.value
-            _state.update { it.copy(loading = true, date = date, serverZoneId = zone) }
+            _state.update {
+                it.copy(
+                    loading = true, date = date, serverZoneId = zone,
+                    rows = if (previous.date == date) it.rows else emptyList()
+                )
+            }
             coroutineScope {
                 val activityRequest = async { activities.list() }
                 val sessionRequest = async { sessions.list() }
@@ -94,13 +102,22 @@ class DashboardViewModel @Inject constructor(
                             }
                         }
                     }.awaitAll()
-                } else previous.rows
+                } else if (previous.date == date) {
+                    val message = (activityResult as ApiResult.Failure).error.message
+                    previous.rows.map { row ->
+                        row.copy(
+                            progress = row.progress.copy(error = message),
+                            streak = row.streak.copy(error = message)
+                        )
+                    }
+                } else emptyList()
                 _state.update {
                     it.copy(
                         loading = false,
                         activities = activityList ?: previous.activities,
                         sessions = (sessionResult as? ApiResult.Success<List<SessionDto>>)?.data ?: previous.sessions,
                         rows = rows,
+                        loadedDate = if (activityList != null) date else previous.loadedDate,
                         activityError = (activityResult as? ApiResult.Failure)?.error?.message,
                         sessionError = (sessionResult as? ApiResult.Failure)?.error?.message
                     )

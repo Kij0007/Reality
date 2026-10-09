@@ -16,6 +16,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.ZoneId
@@ -76,8 +77,9 @@ class SettingsViewModel @Inject constructor(
             _state.update { it.copy(saving = true, error = null, message = null) }
             try {
                 preferences.saveBackendUrl(state.value.url.trim())
+                val saved = preferences.settings.first()
                 savedState.remove<String>("serverUrl")
-                _state.update { it.copy(message = R.string.settings_saved) }
+                _state.update { it.copy(url = saved.backendUrl, message = R.string.settings_saved) }
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (error: IllegalArgumentException) {
@@ -101,8 +103,9 @@ class SettingsViewModel @Inject constructor(
             _state.update { it.copy(saving = true, error = null, message = null) }
             try {
                 preferences.saveServerZone(zone)
+                val saved = preferences.settings.first()
                 savedState.remove<String>("serverZone")
-                _state.update { it.copy(message = R.string.settings_zone_saved) }
+                _state.update { it.copy(zone = saved.serverZoneId, message = R.string.settings_zone_saved) }
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (_: Exception) {

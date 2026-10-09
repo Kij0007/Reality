@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -20,7 +21,6 @@ import com.reality.android.data.remote.dto.ActivityDto
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import java.util.Locale
 
 data class RemoteValue<T>(val data: T? = null, val error: String? = null) {
     val isCurrent: Boolean get() = data != null && error == null
@@ -152,11 +152,12 @@ internal fun DateSelector(date: LocalDate, onDate: (LocalDate) -> Unit) {
 
 @Composable
 internal fun MonthSelector(month: YearMonth, onMonth: (YearMonth) -> Unit) {
+    val locale = LocalConfiguration.current.locales[0]
     var open by remember { mutableStateOf(false) }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         TextButton(onClick = { onMonth(month.minusMonths(1)) }) { Text(stringResource(R.string.insights_previous)) }
         TextButton(onClick = { open = true }, modifier = Modifier.weight(1f)) {
-            Text(month.format(DateTimeFormatter.ofPattern("MMM uuuu", Locale.getDefault())))
+            Text(month.format(DateTimeFormatter.ofPattern("MMM uuuu", locale)))
         }
         TextButton(onClick = { onMonth(month.plusMonths(1)) }) { Text(stringResource(R.string.insights_next)) }
     }
@@ -181,12 +182,12 @@ internal fun MonthSelector(month: YearMonth, onMonth: (YearMonth) -> Unit) {
                     )
                     Box {
                         OutlinedButton(onClick = { expanded = true }) {
-                            Text(Month.of(selectedMonth).getDisplayName(java.time.format.TextStyle.FULL, Locale.getDefault()))
+                            Text(Month.of(selectedMonth).getDisplayName(java.time.format.TextStyle.FULL, locale))
                         }
                         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                             Month.values().forEach { option ->
                                 DropdownMenuItem(
-                                    text = { Text(option.getDisplayName(java.time.format.TextStyle.FULL, Locale.getDefault())) },
+                                    text = { Text(option.getDisplayName(java.time.format.TextStyle.FULL, locale)) },
                                     onClick = { selectedMonth = option.value; expanded = false }
                                 )
                             }

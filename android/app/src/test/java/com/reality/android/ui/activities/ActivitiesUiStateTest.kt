@@ -36,7 +36,7 @@ class ActivitiesUiStateTest {
     }
 
     @Test fun activityActionsRequireConfirmedSessionRead() {
-        val state = ActivityDetailUiState(activity = items.first(), loading = false, sessionsKnown = false)
+        val state = ActivityDetailUiState(activity = items.first(), loading = false, sessionsKnown = false, activityKnown = true)
         assertFalse(state.canStart)
         assertFalse(state.canDelete)
         assertTrue(state.copy(sessionsKnown = true).canStart)
@@ -45,7 +45,7 @@ class ActivitiesUiStateTest {
 
     @Test fun openSessionPreventsDuplicateStartAndActivityDeletion() {
         val state = ActivityDetailUiState(
-            activity = items.first(), loading = false, sessionsKnown = true,
+            activity = items.first(), loading = false, sessionsKnown = true, activityKnown = true,
             sessions = listOf(SessionDto(
                 id = 9, activityId = 1, startTime = "2026-10-08T10:00:00", endTime = null, duration = null,
             )),

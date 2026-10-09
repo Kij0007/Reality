@@ -37,7 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -162,8 +162,8 @@ fun ActivityFormScreen(
         if (state.loading) {
             CircularProgressIndicator()
         } else {
-            val enabled = !state.saving && !state.uncertainWrite
-            WorkflowError(state.error, if (!state.uncertainWrite && activityId != null) ({ viewModel.load(activityId, true) }) else null)
+            val enabled = state.loaded && !state.saving && !state.saved && !state.uncertainWrite
+            WorkflowError(state.error, if (!state.loaded && activityId != null) ({ viewModel.load(activityId, true) }) else null)
             if (state.uncertainWrite) Text(
                 stringResource(R.string.wf_uncertain_create),
                 color = MaterialTheme.colorScheme.error,
@@ -230,13 +230,13 @@ fun ActivityDetailScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
-    val context = LocalContext.current
+    val noticeText = state.notice?.let { stringResource(it) }
     var confirmDelete by rememberSaveable(activityId) { mutableStateOf(false) }
     LaunchedEffect(activityId) { viewModel.load(activityId) }
     WorkflowForegroundRefresh(viewModel::refresh)
     LaunchedEffect(state.deleted) { if (state.deleted) onDeleted() }
-    LaunchedEffect(state.notice) {
-        state.notice?.let { snackbar.showSnackbar(context.getString(it)); viewModel.clearNotice() }
+    LaunchedEffect(noticeText) {
+        noticeText?.let { snackbar.showSnackbar(it); viewModel.clearNotice() }
     }
     PullToRefreshBox(isRefreshing = state.loading, onRefresh = viewModel::refresh, modifier = Modifier.fillMaxSize()) {
         Column(
@@ -277,7 +277,7 @@ fun ActivityDetailScreen(
                     stringResource(R.string.wf_session_already_open),
                     color = MaterialTheme.colorScheme.primary,
                 )
-                Text(stringResource(R.string.wf_sessions_count, state.sessions.size), style = MaterialTheme.typography.titleMedium)
+                Text(pluralStringResource(R.plurals.wf_sessions_count, state.sessions.size, state.sessions.size), style = MaterialTheme.typography.titleMedium)
                 state.sessions.filter { it.endTime != null }.sortedByDescending { it.startTime }.take(5).forEach { session ->
                     Card(Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -299,7 +299,7 @@ fun ActivityDetailScreen(
     if (confirmDelete) DestructiveConfirmation(
         title = stringResource(R.string.wf_delete_activity),
         body = stringResource(R.string.wf_activity_delete_confirm),
-        busy = state.busy, onDismiss = { confirmDelete = false },
+        busy = state.busy || state.loading, onDismiss = { confirmDelete = false },
         onConfirm = { confirmDelete = false; viewModel.delete() },
     )
 }

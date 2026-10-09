@@ -17,6 +17,7 @@ import com.reality.android.data.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.async
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -110,6 +111,7 @@ data class ActivityFormUiState(
     val error: String? = null,
     val saved: Boolean = false,
     val uncertainWrite: Boolean = false,
+    val loaded: Boolean = false,
 )
 
 @HiltViewModel
@@ -123,18 +125,21 @@ class ActivityFormViewModel @Inject constructor(
     private var initialized = false
     private var requestedId: Long? = null
     private val saveGate = Mutex()
+    private var loadJob: Job? = null
 
     fun load(id: Long?, force: Boolean = false) {
+        if (mutable.value.saving) return
         if (initialized && id == requestedId && !force) return
         initialized = true
         requestedId = id
-        mutable.update { it.copy(id = id, loading = true, error = null) }
-        viewModelScope.launch {
+        loadJob?.cancel()
+        mutable.update { it.copy(id = id, loading = true, loaded = false, error = null) }
+        loadJob = viewModelScope.launch {
             val storedId = savedState.get<String>("formId")
             val key = id?.toString() ?: "new"
             if (!force && storedId == key && savedState.get<Boolean>("hasDraft") == true) {
                 mutable.value = ActivityFormUiState(
-                    id = id, loading = false,
+                    id = id, loading = false, loaded = true,
                     name = savedState["name"] ?: "",
                     duration = savedState["duration"] ?: "",
                     category = savedState.get<String>("category")?.let { value ->
@@ -142,20 +147,21 @@ class ActivityFormViewModel @Inject constructor(
                     },
                     days = savedState.get<ArrayList<String>>("days")?.toSet() ?: emptySet(),
                     startDate = savedState["startDate"] ?: "",
-                    uncertainWrite = savedState["uncertainWrite"] ?: false,
+                    uncertainWrite = savedState.get<Boolean>("uncertainWrite") == true ||
+                        savedState.get<Boolean>("writePending") == true,
                 )
                 return@launch
             }
             if (id == null) {
                 val zone = settings.settings.first().serverZoneId
-                mutable.value = ActivityFormUiState(loading = false, startDate = today(zone).toString())
+                mutable.value = ActivityFormUiState(loading = false, loaded = true, startDate = today(zone).toString())
                 persist()
             } else {
                 when (val result = repository.get(id)) {
                     is ApiResult.Success -> {
                         val activity = result.data
                         mutable.value = ActivityFormUiState(
-                            id = id, loading = false,
+                            id = id, loading = false, loaded = true,
                             name = activity.name.orEmpty(),
                             duration = activity.minimumDuration?.toString().orEmpty(),
                             category = activity.category,
@@ -179,7 +185,8 @@ class ActivityFormViewModel @Inject constructor(
         it.copy(days = if (value in it.days) it.days - value else it.days + value)
     }
     private fun change(transform: (ActivityFormUiState) -> ActivityFormUiState) {
-        if (mutable.value.saving || mutable.value.uncertainWrite) return
+        if (mutable.value.loading || !mutable.value.loaded || mutable.value.saving ||
+            mutable.value.saved || mutable.value.uncertainWrite) return
         mutable.update { transform(it).copy(fieldErrors = emptyMap(), error = null) }
         persist()
     }
@@ -196,7 +203,8 @@ class ActivityFormViewModel @Inject constructor(
     }
     fun save() {
         val value = mutable.value
-        if (value.loading || value.saving || value.uncertainWrite || !saveGate.tryLock()) return
+        if (value.loading || !value.loaded || value.saving || value.saved ||
+            value.uncertainWrite || !saveGate.tryLock()) return
         val errors = validateActivity(
             value.name, value.duration, value.category, value.days, value.startDate
         )
@@ -206,8 +214,10 @@ class ActivityFormViewModel @Inject constructor(
             return
         }
         val category = value.category ?: run { saveGate.unlock(); return }
-        val duration = value.duration.toIntOrNull() ?: run { saveGate.unlock(); return }
+        val duration = value.duration.trim().toIntOrNull() ?: run { saveGate.unlock(); return }
         mutable.update { it.copy(saving = true, error = null) }
+        // A recreated form cannot know whether an interrupted request reached the server.
+        savedState["writePending"] = true
         viewModelScope.launch {
             try {
                 val request = ActivityRequest(
@@ -217,10 +227,12 @@ class ActivityFormViewModel @Inject constructor(
                 val result = value.id?.let { repository.update(it, request) } ?: repository.create(request)
                 when (result) {
                     is ApiResult.Success -> {
+                        savedState["writePending"] = false
                         savedState["hasDraft"] = false
                         mutable.update { it.copy(saving = false, saved = true) }
                     }
                     is ApiResult.Failure -> {
+                        savedState["writePending"] = false
                         mutable.update {
                             it.copy(saving = false, error = result.error.message,
                                 uncertainWrite = result.error.uncertainWrite)
@@ -244,11 +256,12 @@ data class ActivityDetailUiState(
     val notice: Int? = null,
     val deleted: Boolean = false,
     val startedSessionId: Long? = null,
+    val activityKnown: Boolean = false,
 ) {
     val openSessions get() = sessions.filter { it.endTime == null }
-    val canStart get() = !loading && !busy && sessionsKnown &&
+    val canStart get() = !loading && !busy && sessionsKnown && activityKnown &&
         activity?.active != false && openSessions.isEmpty() && activity != null
-    val canDelete get() = !loading && !busy && sessionsKnown &&
+    val canDelete get() = !loading && !busy && sessionsKnown && activityKnown &&
         openSessions.isEmpty() && activity != null
 }
 
@@ -276,11 +289,11 @@ class ActivityDetailViewModel @Inject constructor(
         }
     }
     private suspend fun fetch(id: Long) = coroutineScope {
-        mutable.update { it.copy(loading = true, error = null, sessionsError = null, sessionsKnown = false) }
+        mutable.update { it.copy(loading = true, error = null, sessionsError = null, sessionsKnown = false, activityKnown = false) }
         val activityResult = async { activities.get(id) }
         val sessionResult = async { sessions.forActivity(id) }
         when (val result = activityResult.await()) {
-            is ApiResult.Success -> mutable.update { it.copy(activity = result.data) }
+            is ApiResult.Success -> mutable.update { it.copy(activity = result.data, activityKnown = true) }
             is ApiResult.Failure -> mutable.update { it.copy(error = result.error.message) }
         }
         when (val result = sessionResult.await()) {

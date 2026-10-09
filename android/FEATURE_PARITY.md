@@ -27,7 +27,7 @@ Scope: all 18 APIs from the six controllers at inspected revision 09a7660d023c8e
 | Session deletion | DELETE session | Confirmation | Confirmation | Permanent delete; handles 204 |
 | Live timer estimate | Timestamps/break rows | Live timer | Live timer | No separate background persistence source |
 | Daily target completion | Daily progress.completed | Progress | Progress | No invented manual complete API |
-| Current streak/evaluated date | GET streak | Progress | Progress/Home | Through backend yesterday |
+| Current streak/evaluated date | GET streak | Progress | Progress; Home shows the streak count | Through backend yesterday |
 | Monthly report | GET report | Reports | Reports | All 12 response fields represented |
 | Selected-month longest streak | Report.longestStreak | Reports | Reports | Not presented as lifetime best |
 | Present current streak in historical report | Report.currentStreak | Reports | Reports | Label explicitly distinguishes it |

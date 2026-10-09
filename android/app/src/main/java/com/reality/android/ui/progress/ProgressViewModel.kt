@@ -40,11 +40,18 @@ class ProgressViewModel @Inject constructor(
     private val _state = MutableStateFlow(ProgressUiState())
     val state = _state.asStateFlow()
     private var loadJob: Job? = null
+    private var backendUrl: String? = null
 
     init {
         viewModelScope.launch {
-            settings.settings.map { it.backendUrl to it.serverZoneId }.distinctUntilChanged().collect { (_, zone) ->
+            settings.settings.map { it.backendUrl to it.serverZoneId }.distinctUntilChanged().collect { (url, zone) ->
+                loadJob?.cancel()
+                if (backendUrl != null && backendUrl != url) _state.value = ProgressUiState()
+                backendUrl = url
                 val date = savedState.get<String>("progressDate")?.let { runCatching { LocalDate.parse(it) }.getOrNull() } ?: today(zone)
+                if (_state.value.date != date) _state.update {
+                    it.copy(progress = RemoteValue(), sessions = RemoteValue())
+                }
                 _state.update { it.copy(date = date, serverZoneId = zone) }
                 restart()
             }

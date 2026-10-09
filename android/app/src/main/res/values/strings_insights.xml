@@ -7,7 +7,6 @@
     <string name="insights_previous">Previous</string>
     <string name="insights_next">Next</string>
     <string name="insights_year">Year</string>
-    <string name="insights_month">Month</string>
     <string name="insights_choose_month">Choose report month</string>
     <string name="insights_year_error">Enter a year from 1000 to 9999.</string>
     <string name="insights_complete_schedule">Complete activity schedule</string>
@@ -34,7 +33,10 @@
     <string name="insights_duration_target">%1$s recorded · %2$d min target</string>
     <string name="insights_target_completed">Daily target completed</string>
     <string name="insights_target_pending">Daily target not yet completed</string>
-    <string name="insights_streak_days">%1$d scheduled days in the current streak</string>
+    <plurals name="insights_streak_days">
+        <item quantity="one">%1$d scheduled day in the current streak</item>
+        <item quantity="other">%1$d scheduled days in the current streak</item>
+    </plurals>
     <string name="insights_track">Track</string>
     <string name="insights_details">Details</string>
     <string name="insights_edit">Edit</string>
@@ -42,7 +44,11 @@
     <string name="insights_schedule_note">Schedules repeat on selected weekdays from the commitment start date. Select a date to see its next seven days. Change a schedule by editing the activity.</string>
     <string name="insights_schedule_unavailable">Schedule data has not loaded.</string>
     <string name="insights_no_schedule_date">No commitments scheduled for this date.</string>
-    <string name="insights_target_minutes">Minimum daily duration: %1$d minutes</string>
+    <plurals name="insights_target_minutes">
+        <item quantity="one">Minimum daily duration: %1$d minute</item>
+        <item quantity="other">Minimum daily duration: %1$d minutes</item>
+    </plurals>
+    <string name="insights_target_unavailable">Minimum daily duration unavailable. Edit this activity to set a valid target.</string>
     <string name="insights_repeat_schedules">Repeat schedules</string>
     <string name="insights_starts_on">Commitment starts: %1$s</string>
     <string name="insights_no_repeat_days">No repeat days configured</string>
