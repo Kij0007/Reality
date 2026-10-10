@@ -49,7 +49,8 @@ async function until(check, description) {
 
 async function contains(locator, value) {
   await locator.waitFor({ state: 'visible' });
-  await until(async () => (await locator.innerText()).includes(value), value);
+  // innerText reflects CSS text-transform; presentation casing is not a contract.
+  await until(async () => (await locator.innerText()).toLowerCase().includes(value.toLowerCase()), value);
 }
 
 async function screenshot(name) {
