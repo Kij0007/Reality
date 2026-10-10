@@ -2,9 +2,9 @@ name: Reality Cloud
 on:
   push:
     branches: ["main", "codex/reality-android"]
-    paths: ["src/**", "pom.xml", "mvnw", ".mvn/**", "Dockerfile", ".dockerignore", "render.yaml", "deployment/**", ".github/workflows/cloud.yml"]
+    paths: ["src/**", "scripts/**", "pom.xml", "mvnw", ".mvn/**", "Dockerfile", ".dockerignore", "render.yaml", "deployment/**", ".github/workflows/cloud.yml"]
   pull_request:
-    paths: ["src/**", "pom.xml", "mvnw", ".mvn/**", "Dockerfile", ".dockerignore", "render.yaml", "deployment/**", ".github/workflows/cloud.yml"]
+    paths: ["src/**", "scripts/**", "pom.xml", "mvnw", ".mvn/**", "Dockerfile", ".dockerignore", "render.yaml", "deployment/**", ".github/workflows/cloud.yml"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -53,6 +53,14 @@ jobs:
           test "$(docker inspect --format '{{.Config.User}}' reality-cloud)" = '10001:10001'
       - name: Verify public web, authentication, all API routes, and account isolation
         run: python3 deployment/smoke_test.py --base-url http://127.0.0.1:10000/ --allow-http --allow-create-test-data --output deployment-smoke-results.json
+      - name: Install isolated Chromium UI test tools
+        run: |
+          npm install --prefix "$RUNNER_TEMP/reality-browser" --no-package-lock --no-save playwright@1.63.0
+          "$RUNNER_TEMP/reality-browser/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Verify real web workflows in Chromium
+        env:
+          REALITY_PLAYWRIGHT_MODULE: ${{ runner.temp }}/reality-browser/node_modules/playwright/index.mjs
+        run: node scripts/web-browser.test.mjs --base-url http://127.0.0.1:10000/ --allow-create-test-data --output-dir web-browser-results
       - name: Collect runtime evidence
         if: always()
         run: |
@@ -71,6 +79,7 @@ jobs:
             cloud-container.log
             cloud-memory.txt
             cloud-container-state.json
+            web-browser-results/
           if-no-files-found: warn
       - name: Stop disposable application container
         if: always()
