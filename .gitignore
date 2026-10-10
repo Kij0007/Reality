@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Local deployment and signing credentials
+.env
+.env.*
+*.jks
+*.keystore
+local.properties

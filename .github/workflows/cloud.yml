@@ -1,0 +1,86 @@
+name: Reality Cloud
+on:
+  push:
+    branches: ["main", "codex/reality-android"]
+    paths: ["src/**", "scripts/**", "pom.xml", "mvnw", ".mvn/**", "Dockerfile", ".dockerignore", "render.yaml", "deployment/**", ".github/workflows/cloud.yml"]
+  pull_request:
+    paths: ["src/**", "scripts/**", "pom.xml", "mvnw", ".mvn/**", "Dockerfile", ".dockerignore", "render.yaml", "deployment/**", ".github/workflows/cloud.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: reality-cloud-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: reality_ci
+          POSTGRES_USER: reality_ci
+          # Disposable CI database only; never a hosting credential.
+          POSTGRES_PASSWORD: ephemeral-ci-only
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U reality_ci -d reality_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Backend compilation and H2 integration tests
+        run: sh ./mvnw --batch-mode --no-transfer-progress verify
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Web API and account state regression tests
+        run: node --test scripts/web-api.test.mjs
+      - name: Build complete web and API image
+        run: docker build --tag reality:ci .
+      - name: Start cloud profile with a 512 MB limit and real PostgreSQL
+        run: |
+          docker run --detach --name reality-cloud --network host --memory 512m --cpus 1 \
+            --env PORT=10000 \
+            --env DATABASE_URL='jdbc:postgresql://127.0.0.1:5432/reality_ci?sslmode=disable' \
+            --env DATABASE_USERNAME=reality_ci --env DATABASE_PASSWORD=ephemeral-ci-only \
+            reality:ci
+          test "$(docker inspect --format '{{.Config.User}}' reality-cloud)" = '10001:10001'
+      - name: Verify public web, authentication, all API routes, and account isolation
+        run: python3 deployment/smoke_test.py --base-url http://127.0.0.1:10000/ --allow-http --allow-create-test-data --output deployment-smoke-results.json
+      - name: Install isolated Chromium UI test tools
+        run: |
+          npm install --prefix "$RUNNER_TEMP/reality-browser" --no-package-lock --no-save playwright@1.63.0
+          "$RUNNER_TEMP/reality-browser/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Verify real web workflows in Chromium
+        env:
+          REALITY_PLAYWRIGHT_MODULE: ${{ runner.temp }}/reality-browser/node_modules/playwright/index.mjs
+        run: node scripts/web-browser.test.mjs --base-url http://127.0.0.1:10000/ --allow-create-test-data --output-dir web-browser-results
+      - name: Collect runtime evidence
+        if: always()
+        run: |
+          docker logs reality-cloud > cloud-container.log 2>&1 || true
+          docker stats --no-stream reality-cloud > cloud-memory.txt 2>&1 || true
+          docker inspect --format '{{json .State}}' reality-cloud > cloud-container-state.json 2>&1 || true
+      - name: Upload verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Reality-cloud-verification
+          path: |
+            target/surefire-reports/
+            target/failsafe-reports/
+            deployment-smoke-results.json
+            cloud-container.log
+            cloud-memory.txt
+            cloud-container-state.json
+            web-browser-results/
+          if-no-files-found: warn
+      - name: Stop disposable application container
+        if: always()
+        run: docker rm --force reality-cloud || true

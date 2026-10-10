@@ -11,8 +11,8 @@ public interface SessionBreakRepository
         extends JpaRepository<SessionBreak, Long> {
 
     Optional<SessionBreak>
-            findBySessionIdAndEndTimeIsNull(Long sessionId);
+            findBySessionIdAndSessionActivityOwnerIdAndEndTimeIsNull(Long sessionId, Long ownerId);
 
     List<SessionBreak>
-            findBySessionId(Long sessionId);
+            findBySessionIdAndSessionActivityOwnerId(Long sessionId, Long ownerId);
 }

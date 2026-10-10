@@ -1,0 +1,17 @@
+# The image needs only the Maven descriptor and production sources/resources.
+**
+!Dockerfile
+!pom.xml
+!src/
+!src/main/
+!src/main/**
+**/.env
+**/.env.*
+**/*secret*
+**/*credential*
+**/*.bak
+**/*.orig
+**/*.key
+**/*.pem
+**/*.p12
+**/*.jks

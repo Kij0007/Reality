@@ -5,44 +5,40 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.reality.dto.BreakRequestDTO;
 import com.reality.dto.BreakResponseDTO;
 import com.reality.entity.Session;
 import com.reality.entity.SessionBreak;
-import com.reality.exception.InvalidActivityException;
-import com.reality.exception.ResourceNotFoundException;
 import com.reality.repository.SessionBreakRepository;
-import com.reality.repository.SessionRepository;
 import com.reality.services.SessionBreakService;
+import com.reality.services.OwnedResources;
 
 @Service
+@Transactional(readOnly = true)
 public class SessionBreakServiceImpl
         implements SessionBreakService {
 
-    private final SessionRepository sessionRepository;
+    private final OwnedResources owned;
 
     private final SessionBreakRepository sessionBreakRepository;
 
     public SessionBreakServiceImpl(
-            SessionRepository sessionRepository,
+            OwnedResources owned,
             SessionBreakRepository sessionBreakRepository) {
 
-        this.sessionRepository = sessionRepository;
+        this.owned = owned;
         this.sessionBreakRepository = sessionBreakRepository;
     }
 
     @Override
+    @Transactional
     public BreakResponseDTO startBreak(
             Long sessionId,
             BreakRequestDTO request) {
 
-        Session session = sessionRepository
-                .findById(sessionId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Session not found with id: "
-                                        + sessionId));
+        Session session = owned.session(sessionId);
 
         // Already stopped
         if (session.getEndTime() != null) {
@@ -52,7 +48,7 @@ public class SessionBreakServiceImpl
 
         // Prevent two active breaks
         sessionBreakRepository
-                .findBySessionIdAndEndTimeIsNull(sessionId)
+                .findBySessionIdAndSessionActivityOwnerIdAndEndTimeIsNull(sessionId, owned.ownerId())
                 .ifPresent(existingBreak -> {
                     throw new IllegalArgumentException(
                             "Session is already on break");
@@ -78,15 +74,11 @@ public class SessionBreakServiceImpl
     }
 
     @Override
+    @Transactional
     public BreakResponseDTO resumeSession(
             Long sessionId) {
 
-        Session session = sessionRepository
-                .findById(sessionId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Session not found with id: "
-                                        + sessionId));
+        Session session = owned.session(sessionId);
 
         if (session.getEndTime() != null) {
             throw new IllegalArgumentException(
@@ -95,8 +87,8 @@ public class SessionBreakServiceImpl
 
         SessionBreak sessionBreak =
                 sessionBreakRepository
-                        .findBySessionIdAndEndTimeIsNull(
-                                sessionId)
+                        .findBySessionIdAndSessionActivityOwnerIdAndEndTimeIsNull(
+                                sessionId, owned.ownerId())
                         .orElseThrow(() ->
                                 new IllegalArgumentException(
                                         "Session is not currently on break"));
@@ -124,14 +116,10 @@ public class SessionBreakServiceImpl
     public List<BreakResponseDTO>
             getBreaksForSession(Long sessionId) {
 
-        if (!sessionRepository.existsById(sessionId)) {
-            throw new ResourceNotFoundException(
-                    "Session not found with id: "
-                            + sessionId);
-        }
+        owned.session(sessionId);
 
         return sessionBreakRepository
-                .findBySessionId(sessionId)
+                .findBySessionIdAndSessionActivityOwnerId(sessionId, owned.ownerId())
                 .stream()
                 .map(this::mapToResponseDTO)
                 .toList();

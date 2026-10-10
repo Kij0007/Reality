@@ -1,0 +1,137 @@
+name: Reality Android
+on:
+  push:
+    branches: ["codex/reality-android"]
+    paths: ["android/**", "!android/**/*.md", ".github/workflows/android.yml"]
+  pull_request:
+    paths: ["android/**", "!android/**/*.md", ".github/workflows/android.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: reality_android_ci
+          POSTGRES_USER: reality_ci
+          POSTGRES_PASSWORD: disposable-android-ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U reality_ci -d reality_android_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Install Android SDK
+        run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
+      - name: Verify Gradle wrapper integrity
+        run: echo "81a82aaea5abcc8ff68b3dfcb58b3c3c429378efd98e7433460610fecd7ae45f  gradle/wrapper/gradle-wrapper.jar" | sha256sum --check
+      - name: Start real Spring Boot backend for Android API verification
+        env:
+          DATABASE_URL: jdbc:postgresql://127.0.0.1:5432/reality_android_ci
+          DATABASE_USERNAME: reality_ci
+          DATABASE_PASSWORD: disposable-android-ci
+          PORT: "8081"
+        run: |
+          cd ..
+          sh ./mvnw --batch-mode --no-transfer-progress -DskipTests package
+          java -Duser.timezone=Asia/Kolkata -jar target/reality-0.0.1-SNAPSHOT.jar > "$RUNNER_TEMP/reality-android-backend.log" 2>&1 &
+          for attempt in $(seq 1 90); do
+            if curl --fail --silent http://127.0.0.1:8081/api/health; then exit 0; fi
+            sleep 2
+          done
+          cat "$RUNNER_TEMP/reality-android-backend.log"
+          exit 1
+      - name: Build app and UI test APKs, unit tests, and lint
+        env:
+          REALITY_TEST_BASE_URL: http://127.0.0.1:8081/
+          REALITY_TEST_ALLOW_REGISTRATION: "true"
+        run: ./gradlew --no-daemon assembleDebug assembleDebugAndroidTest testDebugUnitTest lintDebug
+      - name: Verify unsigned release minification
+        run: ./gradlew --no-daemon assembleRelease -PPRODUCTION_BACKEND_BASE_URL=https://127.0.0.1/
+      - name: Upload debug APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Reality-debug-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Upload verification reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Reality-Android-verification
+          path: |
+            android/app/build/reports/
+            android/app/build/test-results/
+      - name: Package independently openable Android project
+        if: success()
+        run: |
+          python3 - <<'PY'
+          import pathlib, subprocess, zipfile
+          root = pathlib.Path.cwd().parent
+          files = subprocess.check_output(['git', '-C', str(root), 'ls-files', '-z', 'android']).decode().split('\0')
+          files = [name for name in files if name]
+          assert len(files) >= 50, 'Android source package is incomplete'
+          with zipfile.ZipFile(root / 'Reality-Android-project.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+              for name in files:
+                  archive.write(root / name, pathlib.Path(name).relative_to('android'))
+          PY
+      - name: Upload Android project
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Reality-Android-project
+          path: Reality-Android-project.zip
+
+  emulator-tests:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run Compose behavior tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_2
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: bash android/scripts/verify-emulator.sh
+      - name: Upload emulator test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Reality-Android-Compose-tests
+          path: |
+            android/app/build/reports/androidTests/
+            android/app/build/outputs/androidTest-results/

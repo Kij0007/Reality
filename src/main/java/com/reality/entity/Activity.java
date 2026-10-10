@@ -3,7 +3,6 @@ package com.reality.entity;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 
@@ -31,20 +30,27 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
+import jakarta.persistence.ManyToOne;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "activities")
+@Table(name = "activities", indexes = @Index(name = "idx_activities_owner", columnList = "owner_id"))
 public class Activity {
 
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    // Existing rows remain unowned until an administrator deliberately migrates them.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id")
+    private UserAccount owner;
 
     private String name;
     

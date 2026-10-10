@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Reality" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowActionModeOverlay">true</item>
+    </style>
+    <style name="Theme.Reality.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#101C17</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_reality</item>
+        <item name="postSplashScreenTheme">@style/Theme.Reality</item>
+    </style>
+</resources>
