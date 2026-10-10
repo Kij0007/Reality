@@ -75,50 +75,30 @@ class StartupNavigationTest {
         return ParcelFileDescriptor.AutoCloseInputStream(descriptor).bufferedReader().use { it.readText() }
     }
 
-    @Test fun unreachableBackendDoesNotPreventSettingsOrTopLevelNavigation() {
+    @Test fun signedOutStartupKeepsSettingsReachableWithoutServer() {
         awaitStartup()
-        screenshot("home")
+        awaitText(R.string.auth_login)
+        screenshot("login")
         compose.onNodeWithContentDescription(text(R.string.nav_settings)).performClick()
         awaitText(R.string.settings_url)
-        compose.onNodeWithText(text(R.string.settings_url)).assertIsDisplayed()
         compose.onNodeWithText(text(R.string.settings_save)).assertIsDisplayed()
         screenshot("settings")
-
-        clickDestination(R.string.nav_activities)
-        awaitText(R.string.wf_your_activities)
-        compose.onNodeWithText(text(R.string.wf_your_activities)).assertIsDisplayed()
-        screenshot("activities")
-
-        clickDestination(R.string.nav_track)
-        awaitText(R.string.wf_tracking)
-        compose.onNodeWithText(text(R.string.wf_tracking)).assertIsDisplayed()
-        screenshot("tracking")
-
-        clickDestination(R.string.nav_more)
-        awaitText(R.string.more_heading)
-        compose.onNodeWithText(text(R.string.more_heading)).assertIsDisplayed()
-        screenshot("more")
+        compose.onNodeWithText(text(R.string.go_back)).performClick()
+        awaitText(R.string.auth_login)
+        compose.onNodeWithText(text(R.string.auth_login)).assertIsDisplayed()
     }
 
-    @Test fun nativeEmptyActivityFormValidatesLocallyAndBackReturnsToActivities() {
+    @Test fun nativeAccountFormValidatesBeforeContactingServer() {
         awaitStartup()
-        clickDestination(R.string.nav_activities)
-        awaitText(R.string.wf_your_activities)
-        compose.onAllNodes(hasText(text(R.string.wf_create_activity)) and hasClickAction())
-            .onFirst().performClick()
-        awaitText(R.string.wf_save_activity)
-        screenshot("form")
-        compose.onNodeWithText(text(R.string.wf_save_activity)).performScrollTo().performClick()
-
-        // The ViewModel suite separately verifies no repository write is invoked for this form.
-        compose.onNodeWithText("Enter an activity name.").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("Choose a category.").assertExists()
-        compose.onNodeWithText("Choose at least one valid repeat day.").assertExists()
-        compose.onNodeWithText(text(R.string.wait_for_server)).assertDoesNotExist()
-        compose.onNodeWithText(text(R.string.wf_saving)).assertDoesNotExist()
-
-        compose.onNodeWithContentDescription(text(R.string.go_back)).performClick()
-        awaitText(R.string.wf_your_activities)
-        compose.onNodeWithText(text(R.string.wf_your_activities)).assertIsDisplayed()
+        compose.onNodeWithText(text(R.string.auth_new_account)).performScrollTo().performClick()
+        awaitText(R.string.auth_register)
+        screenshot("register")
+        compose.onNodeWithText(text(R.string.auth_register)).performScrollTo().performClick()
+        compose.onNodeWithText("Use 3–40 lowercase letters, numbers, dots, underscores or hyphens for your username.")
+            .performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText(text(R.string.auth_waking)).assertDoesNotExist()
+        screenshot("validation")
+        compose.onNodeWithText(text(R.string.auth_existing_account)).performScrollTo().performClick()
+        awaitText(R.string.auth_login)
     }
 }

@@ -26,7 +26,16 @@ class LiveBackendFlowTest {
     @Test fun allControllerWorkflowsAgainstReachableSpringBoot() = runBlocking {
         val endpoint = System.getenv("REALITY_TEST_BASE_URL")
         assumeTrue("Set REALITY_TEST_BASE_URL to opt in to real backend writes.", !endpoint.isNullOrBlank())
+        val token = java.util.concurrent.atomic.AtomicReference(System.getenv("REALITY_TEST_TOKEN"))
+        val register = System.getenv("REALITY_TEST_ALLOW_REGISTRATION") == "true"
+        require(token.get() != null || register) { "Provide REALITY_TEST_TOKEN or explicitly allow creating a disposable test account." }
         val client = OkHttpClient.Builder().callTimeout(30, TimeUnit.SECONDS)
+            .addInterceptor { chain ->
+                val request = chain.request().newBuilder().apply {
+                    token.get()?.let { header("Authorization", "Bearer $it") }
+                }.build()
+                chain.proceed(request)
+            }
             .retryOnConnectionFailure(false).followRedirects(false).build()
         val retrofit = Retrofit.Builder().baseUrl(requireNotNull(endpoint))
             .client(client).addConverterFactory(Json { ignoreUnknownKeys = true; explicitNulls = false }
@@ -37,6 +46,13 @@ class LiveBackendFlowTest {
         val daily = retrofit.create(DailyProgressApi::class.java)
         val streak = retrofit.create(StreakApi::class.java)
         val reports = retrofit.create(ReportApi::class.java)
+        val auth = retrofit.create(AuthApi::class.java)
+        if (token.get() == null) {
+            val username = "android_" + UUID.randomUUID().toString().replace("-", "").take(20)
+            val registered = body(auth.register(RegisterRequest(username, "Android CI", "Disposable-CI-password-2026")), 201)
+            token.set(registered.token)
+            assertEquals(registered.user.id, body(auth.me(), 200).id)
+        }
         val name = "Android verification ${UUID.randomUUID()}"
         val request = ActivityRequest(name, 1, ActivityCategory.OTHER,
             DayOfWeek.values().map { it.name }.toSet(), LocalDate.now(ZoneId.of("Asia/Kolkata")).minusDays(1).toString())
@@ -96,6 +112,7 @@ class LiveBackendFlowTest {
         } finally {
             sessionId?.let { id -> runCatching { sessions.delete(id) } }
             activityId?.let { id -> runCatching { activities.delete(id) } }
+            if (register) runCatching { auth.logout() }
             client.dispatcher.executorService.shutdown()
             client.connectionPool.evictAll()
         }

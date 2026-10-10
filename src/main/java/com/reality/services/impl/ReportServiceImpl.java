@@ -6,34 +6,35 @@ import java.time.YearMonth;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.reality.dto.DailyProgressResponseDTO;
 import com.reality.dto.MonthlyReportResponseDTO;
 import com.reality.dto.StreakResponseDTO;
 import com.reality.entity.Activity;
 import com.reality.entity.Session;
-import com.reality.exception.ResourceNotFoundException;
-import com.reality.repository.ActivityRepository;
 import com.reality.repository.SessionRepository;
 import com.reality.services.DailyProgressService;
 import com.reality.services.ReportService;
 import com.reality.services.StreakService;
+import com.reality.services.OwnedResources;
 
 @Service
+@Transactional(readOnly = true)
 public class ReportServiceImpl implements ReportService {
 
-    private final ActivityRepository activityRepository;
+    private final OwnedResources owned;
     private final SessionRepository sessionRepository;
     private final DailyProgressService dailyProgressService;
     private final StreakService streakService;
 
     public ReportServiceImpl(
-            ActivityRepository activityRepository,
+            OwnedResources owned,
             SessionRepository sessionRepository,
             DailyProgressService dailyProgressService,
             StreakService streakService) {
 
-        this.activityRepository = activityRepository;
+        this.owned = owned;
         this.sessionRepository = sessionRepository;
         this.dailyProgressService = dailyProgressService;
         this.streakService = streakService;
@@ -48,12 +49,7 @@ public class ReportServiceImpl implements ReportService {
         // 1. FIND ACTIVITY
         // -----------------------------------------
 
-        Activity activity = activityRepository
-                .findByIdAndActiveTrue(activityId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Active activity not found with id: "
-                                        + activityId));
+        Activity activity = owned.activeActivity(activityId);
 
         // -----------------------------------------
         // 2. MONTH BOUNDARIES
@@ -236,8 +232,9 @@ public class ReportServiceImpl implements ReportService {
              */
             List<Session> sessions =
                     sessionRepository
-                            .findByActivityIdAndStartTimeLessThanAndEndTimeGreaterThan(
+                            .findByActivityIdAndActivityOwnerIdAndStartTimeLessThanAndEndTimeGreaterThan(
                                     activityId,
+                                    owned.ownerId(),
                                     rangeEnd,
                                     rangeStart);
 

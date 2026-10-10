@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.reality.android.R
 import com.reality.android.core.network.ApiResult
 import com.reality.android.core.network.MutationGate
-import com.reality.android.data.repository.ActivityRepository
+import com.reality.android.data.repository.AuthRepository
 import com.reality.android.data.repository.AppSettings
 import com.reality.android.data.repository.SettingsRepository
 import com.reality.android.data.repository.ThemePreference
@@ -36,7 +36,7 @@ data class SettingsUiState(
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val preferences: SettingsRepository,
-    private val activities: ActivityRepository,
+    private val auth: AuthRepository,
     private val mutations: MutationGate,
     private val savedState: SavedStateHandle
 ) : ViewModel() {
@@ -125,7 +125,7 @@ class SettingsViewModel @Inject constructor(
         }
         viewModelScope.launch {
             _state.update { it.copy(testing = true, error = null, message = null) }
-            when (val result = activities.list()) {
+            when (val result = auth.health()) {
                 is ApiResult.Success -> _state.update { it.copy(message = R.string.settings_connected) }
                 is ApiResult.Failure -> _state.update { it.copy(error = result.error.message) }
             }

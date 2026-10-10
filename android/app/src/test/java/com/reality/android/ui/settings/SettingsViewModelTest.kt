@@ -17,7 +17,7 @@ import org.junit.Test
 class SettingsViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val preferences = mockk<SettingsRepository>()
-    private val activities = mockk<ActivityRepository>()
+    private val activities = mockk<AuthRepository>()
     private val stored = MutableStateFlow(AppSettings(backendUrl = "http://10.0.2.2:8081/"))
     private val gate = MutationGate()
 
@@ -41,12 +41,12 @@ class SettingsViewModelTest {
         vm.changeUrl("https://new.example/")
         vm.testConnection()
         runCurrent()
-        coVerify(exactly = 0) { activities.list() }
+        coVerify(exactly = 0) { activities.health() }
         assertEquals(R.string.settings_not_saved, vm.state.value.message)
     }
 
     @Test fun connectionFailureBecomesReadableStateAndClearsLoading() = runTest(dispatcher) {
-        coEvery { activities.list() } returns ApiResult.Failure(AppError("Unable to connect."))
+        coEvery { activities.health() } returns ApiResult.Failure(AppError("Unable to connect."))
         val vm = SettingsViewModel(preferences, activities, gate, SavedStateHandle())
         runCurrent()
         vm.testConnection()

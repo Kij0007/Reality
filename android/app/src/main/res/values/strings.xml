@@ -42,6 +42,22 @@
     <string name="settings_zone_invalid">Enter a valid time zone, such as Asia/Kolkata or UTC.</string>
     <string name="settings_read_failure">Preferences could not be saved. Try again.</string>
     <string name="settings_about">About Reality</string>
-    <string name="settings_about_description">Native Android client for your existing Spring Boot application. Records are saved on the server. Finishing a session records its duration; live timers are estimates. This backend has no login system, so protect your deployment before sharing it.</string>
+    <string name="settings_about_description">Native Android client for your existing Spring Boot application. Records are saved on the server. Finishing a session records its duration; live timers are estimates. Sign in to access your own activities, sessions and progress.</string>
     <string name="wait_for_server">Saving changes. Please wait for the server response.</string>
+    <string name="auth_heading">Keep your commitments.</string>
+    <string name="auth_description">Sign in to your Reality account. Your activities and progress stay with you across devices.</string>
+    <string name="auth_username">Username</string>
+    <string name="auth_display_name">Display name</string>
+    <string name="auth_password">Password</string>
+    <string name="auth_password_help">At least 12 characters; at most 72 UTF-8 bytes.</string>
+    <string name="auth_waking">Connecting to Reality. A free server may take up to two minutes to wake.</string>
+    <string name="auth_working">Signing in…</string>
+    <string name="auth_register">Create account</string>
+    <string name="auth_login">Sign in</string>
+    <string name="auth_existing_account">Already have an account? Sign in</string>
+    <string name="auth_new_account">New to Reality? Create account</string>
+    <string name="auth_account">Your account</string>
+    <string name="auth_logout">Sign out</string>
+    <string name="auth_logout_confirm">Sign out on this device? Your records stay safely on the Reality server.</string>
+    <string name="auth_cancel">Cancel</string>
 </resources>

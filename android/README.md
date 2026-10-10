@@ -4,13 +4,13 @@ Native Kotlin/Jetpack Compose client for the existing Reality Spring Boot REST b
 
 ## What is included
 
-Dashboard; active activities with search/category/sort; activity creation, details, editing and soft deletion; recurring weekday/start-date schedule; session start/stop and history; break/resume and break notes/history; daily progress and current streak; monthly reports; theme, backend URL and server-clock settings. Every runtime record comes from the API. There is no WebView, local PostgreSQL connection, invented login flow, or demo fallback.
+Native registration/sign-in, account display and logout; dashboard; activities with search/category/sort; activity creation, details, editing and soft deletion; recurring weekday/start-date schedule; session start/stop and history; break/resume with notes/history; daily progress, current streak and monthly reports; theme, backend URL and clock settings. Runtime records come from the signed-in user's API. There is no WebView, direct database connection, or demo fallback.
 
 ## Architecture
 
 Compose → lifecycle-aware StateFlow ViewModel → repository → Retrofit/OkHttp → existing Spring Boot → PostgreSQL.
 
-Hilt constructs dependencies. DataStore stores only connection, theme and clock preferences. APIs/DTOs/repositories, screen ViewModels, Compose screens, navigation and theme are separate. DTOs preserve the backend JSON names; API dates remain ISO strings and java.time handles display/calculation. The API is the authority for stored durations, completion, streaks and reports.
+Hilt constructs dependencies. DataStore stores connection/theme/clock preferences and an encrypted account session. AES-GCM encryption uses an Android Keystore key; passwords are never saved. APIs/DTOs/repositories, ViewModels, screens, navigation and theme are separate. DTOs preserve backend JSON names; API dates remain ISO strings and java.time handles display. The API is authoritative for ownership, durations, completion, streaks and reports.
 
 ## Requirements
 
@@ -25,23 +25,31 @@ Hilt constructs dependencies. DataStore stores only connection, theme and clock 
 
 Default debug URL is **http://10.0.2.2:8081/**. Port 8081 is taken from Reality's application configuration.
 
-Change **BACKEND_BASE_URL** in **gradle.properties** before building debug, or use **More → Settings → Backend base URL** on the device. Settings are persisted and override the compiled default. Use a trailing slash and include any Spring context path, such as https://your-host.example/reality/.
+Change **BACKEND_BASE_URL** in **gradle.properties** before building debug, or use the Settings icon on the sign-in screen; after signing in use **More → Settings → Backend base URL**. Saved settings override the compiled default. Use a trailing slash and any actual context path, such as https://your-host.example/reality/. Changing servers requires signing in to the configured backend; tokens are not shared between servers.
 
 For release, provide **PRODUCTION_BACKEND_BASE_URL=https://your-real-backend/** in your local Gradle properties or environment. There is deliberately no fake production server default. Release builds fail clearly until this is supplied and require HTTPS. The application rejects user-info credentials, query strings and fragments in the base URL.
 
-## Local emulator
+## Online phone use
 
-Start the existing PostgreSQL service and Spring Boot app on the PC. Wait for the app to start, and confirm http://localhost:8081/activities responds on that PC. Run an Android emulator and the debug app. Android's special 10.0.2.2 address reaches the development PC; Android localhost refers to Android itself.
+For everyday use with your laptop switched off, host Spring Boot on Render Free and PostgreSQL on Neon Free, then configure the actual Render HTTPS origin. Your phone can use mobile internet or any Wi-Fi; it does not need your laptop's network. Free hosting can sleep and has quotas. These files prepare hosting but do not create provider accounts or a live deployment.
 
-## Physical phone
+The following PC/emulator and LAN instructions are optional local development setups.
+
+## Local development: emulator
+
+Start PostgreSQL and the updated Spring Boot app on the PC, with DATABASE_PASSWORD supplied privately. Wait for http://localhost:8081/api/health to return {"status":"UP"}. Run an emulator and the debug app, then register/sign in. Unauthenticated /activities now correctly returns 401. Android's 10.0.2.2 reaches the PC; Android localhost refers to Android itself.
+
+## Local development: physical phone
 
 Put the PC and phone on the same trusted LAN. Find the PC's LAN IPv4 address with Windows ipconfig. Save http://PC_LAN_IP:8081/ in the debug app's Settings. Ensure Spring Boot listens on an address reachable from the LAN, and allow its port through Windows Firewall for the trusted private network. Guest Wi-Fi isolation can prevent access. No router port forwarding is required for same-LAN use.
 
-## Production
+## Hosted server and account behavior
 
 Deploy the existing Spring Boot service and its database separately from Android. Configure the actual public HTTPS base URL. Native Retrofit requests do not need browser CORS workarounds. Android connects only to Spring Boot, never to PostgreSQL. No database credentials belong in the app.
 
-The currently inspected backend has **no authentication or user ownership**; the Android app preserves that contract. Protect a deployment before exposing personal records or allowing unrelated users to access the same shared data.
+This branch includes Spring Security, registration/login, opaque bearer tokens, and owner-scoped activities and related data. Tokens expire after 30 days; logout revokes the current token and 401 clears its matching saved session. Restored sessions are validated through /api/auth/me. Foreign/unowned IDs return 404. First registration never inherits legacy unowned rows.
+
+Free Render + Neon files are documented in [deployment/README.md](https://github.com/Kij0007/Reality/blob/codex/reality-android/deployment/README.md). No public URL has been provisioned by these files. Keep provider plans Free, account for cold starts/quotas, and configure Android with the actual Render HTTPS URL after deployment.
 
 ## Build and install debug APK
 
@@ -93,7 +101,7 @@ android/
 │       │   │   ├── core/network/, core/util/
 │       │   │   ├── data/remote/, data/repository/
 │       │   │   ├── di/
-│       │   │   └── ui/activities/, tracking/, dashboard/, schedule/,
+│       │   │   └── ui/auth/, activities/, tracking/, dashboard/, schedule/,
 │       │   │          progress/, reports/, settings/, navigation/, theme/
 │       │   └── res/
 │       ├── debug/     (HTTP permission is restricted to this build)
@@ -117,11 +125,13 @@ android/
 - Activity deletion is soft deletion; there is no restore or separate activate API.
 - Recurring schedules contain a start date and weekdays, without time-of-day or reminder APIs.
 - Stopping records a session and closes an open break. Completion is the backend's daily target result, not a separate complete endpoint.
-- Finished duration values, daily totals and reports are shown exactly as returned. See BACKEND_INTEGRATION.md for known backend accounting/deletion limitations in the inspected GitHub revision.
+- Finished duration values, daily totals and reports are shown exactly as returned. This branch applies the minimal backend accounting/deletion repairs and adds ownership; see BACKEND_INTEGRATION.md.
 - Live timers are explicitly estimates from returned timestamps and break records. They do not write time every second and do not run a separate background recording engine.
 - Streaks evaluate through server yesterday; selected-month best streak and present current streak are distinct.
 - Daily/report reads can fail independently. Missing dates/repeat days are named and editable without guessing historical metadata.
 - Writes are not automatically retried after a timeout. A request may already have reached the server; refresh and inspect server state before trying again.
+- Before account submission, a read-only health warmup waits up to 120 seconds for sleeping free hosting. It never repeats the account write. Settings Test connection checks process liveness; an authenticated read additionally checks database access.
+- The backend limits login/registration password work on its single instance to 60 accepted attempts per minute and four concurrent requests. A rejected request returns 429 and a Retry-After header; wait before retrying.
 - The API returns local timestamps without offsets. Set Settings → Backend clock to the server JVM's zone (default Asia/Kolkata for this project). This controls Android's date boundaries and timer interpretation; it does not change the server.
 
-Read SETUP.md for the complete first-run flow, BACKEND_INTEGRATION.md for all 18 requests, FEATURE_PARITY.md for coverage, and VERIFICATION.md for actual build/test results and limitations.
+Read SETUP.md for first-run steps, BACKEND_INTEGRATION.md for all 23 routes, FEATURE_PARITY.md for coverage, and VERIFICATION.md for actual test evidence. There is no email verification, self-service password reset, account-delete API, or token-refresh endpoint.

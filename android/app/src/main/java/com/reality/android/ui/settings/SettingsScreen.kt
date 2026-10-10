@@ -15,6 +15,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.reality.android.R
 import com.reality.android.data.repository.ThemePreference
+import com.reality.android.ui.auth.AccountCard
 
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
@@ -36,6 +37,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).imePadding().padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+            AccountCard()
             SettingsCard(R.string.settings_server) {
                 OutlinedTextField(
                     value = state.url, onValueChange = viewModel::changeUrl,

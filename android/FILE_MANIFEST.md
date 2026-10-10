@@ -1,14 +1,19 @@
 # Reality Android file destinations
 
-Extract Reality-Android.zip into its own folder, such as D:/Reality-Android. Open the folder containing settings.gradle.kts in Android Studio. Keep it separate from Spring Boot src/main/resources/static.
+Extract the Android project ZIP into its own folder, such as D:/Reality-Android. Open the folder containing settings.gradle.kts in Android Studio. Keep native sources separate from Spring Boot src/main/resources/static.
 
-All paths below are relative to that Android project folder. Source files are already wired; no manual Kotlin or XML integration is required.
+All paths below are relative to that Android project folder. Files are already wired; no manual Kotlin/XML integration is needed. Account networking, encrypted session storage and native account forms are included.
+
+The complete repository additionally contains the updated backend, static web client and deployment/ documents, Dockerfile, render.yaml and cloud workflow outside android/. The Android-only source ZIP does not include the server or provision a hosted URL. Configure the reachable backend, then register/sign in. For phone use with the laptop switched off, use the actual hosted HTTPS origin.
+
+Current source inventory (102 files):
 
 ```text
 .gitattributes
 .gitignore
 app/build.gradle.kts
 app/proguard-rules.pro
+app/src/androidTest/java/com/reality/android/ui/SessionPersistenceTest.kt
 app/src/androidTest/java/com/reality/android/ui/StartupNavigationTest.kt
 app/src/androidTest/java/com/reality/android/ui/tracking/SessionActionsTest.kt
 app/src/debug/AndroidManifest.xml
@@ -16,14 +21,21 @@ app/src/debug/res/xml/network_security_config.xml
 app/src/main/AndroidManifest.xml
 app/src/main/java/com/reality/android/core/network/ApiExecutor.kt
 app/src/main/java/com/reality/android/core/network/ApiResult.kt
+app/src/main/java/com/reality/android/core/network/AuthInterceptor.kt
+app/src/main/java/com/reality/android/core/network/AuthRules.kt
 app/src/main/java/com/reality/android/core/network/BackendUrl.kt
 app/src/main/java/com/reality/android/core/network/BackendUrlInterceptor.kt
 app/src/main/java/com/reality/android/core/network/MutationGate.kt
+app/src/main/java/com/reality/android/core/network/SessionLifetime.kt
 app/src/main/java/com/reality/android/core/util/ActivityValidation.kt
 app/src/main/java/com/reality/android/core/util/RealityTime.kt
+app/src/main/java/com/reality/android/data/remote/api/AuthApi.kt
 app/src/main/java/com/reality/android/data/remote/api/RealityApis.kt
+app/src/main/java/com/reality/android/data/remote/dto/AuthDto.kt
 app/src/main/java/com/reality/android/data/remote/dto/RealityDtos.kt
+app/src/main/java/com/reality/android/data/repository/AuthRepository.kt
 app/src/main/java/com/reality/android/data/repository/RealityRepositories.kt
+app/src/main/java/com/reality/android/data/repository/SessionStore.kt
 app/src/main/java/com/reality/android/data/repository/SettingsReadRecovery.kt
 app/src/main/java/com/reality/android/data/repository/SettingsRepository.kt
 app/src/main/java/com/reality/android/di/NetworkModule.kt
@@ -32,6 +44,8 @@ app/src/main/java/com/reality/android/RealityApplication.kt
 app/src/main/java/com/reality/android/ui/activities/ActivityScreens.kt
 app/src/main/java/com/reality/android/ui/activities/ActivityViewModels.kt
 app/src/main/java/com/reality/android/ui/activities/WorkflowComponents.kt
+app/src/main/java/com/reality/android/ui/auth/AuthScreen.kt
+app/src/main/java/com/reality/android/ui/auth/AuthViewModel.kt
 app/src/main/java/com/reality/android/ui/dashboard/DashboardScreen.kt
 app/src/main/java/com/reality/android/ui/dashboard/DashboardViewModel.kt
 app/src/main/java/com/reality/android/ui/navigation/NavigationViewModel.kt
@@ -64,11 +78,14 @@ app/src/main/res/xml/data_extraction_rules.xml
 app/src/test/java/com/reality/android/core/NetworkSafetyTest.kt
 app/src/test/java/com/reality/android/core/RealityRulesTest.kt
 app/src/test/java/com/reality/android/data/ApiContractTest.kt
+app/src/test/java/com/reality/android/data/AuthIntegrationTest.kt
+app/src/test/java/com/reality/android/data/SessionLifetimeTest.kt
 app/src/test/java/com/reality/android/data/SettingsReadRecoveryTest.kt
 app/src/test/java/com/reality/android/integration/LiveBackendFlowTest.kt
 app/src/test/java/com/reality/android/ui/activities/ActivitiesUiStateTest.kt
 app/src/test/java/com/reality/android/ui/activities/ActivityDetailViewModelTest.kt
 app/src/test/java/com/reality/android/ui/activities/ActivityFormViewModelTest.kt
+app/src/test/java/com/reality/android/ui/auth/AuthViewModelTest.kt
 app/src/test/java/com/reality/android/ui/dashboard/DashboardSummaryTest.kt
 app/src/test/java/com/reality/android/ui/dashboard/DashboardViewModelTest.kt
 app/src/test/java/com/reality/android/ui/navigation/RoutesTest.kt

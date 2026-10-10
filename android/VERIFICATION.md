@@ -1,46 +1,41 @@
-# Reality Android verification
+# Reality verification
 
-## Scope and source
+## Current integration scope
 
-All 18 endpoints in the six Spring Boot controllers were inspected at backend revision 09a7660d023c8e6d8a7c681c26daf7540d04ed18. DTO names, nullable legacy metadata, enum values, ISO date formats, status codes, error bodies, service rules and repository queries were reviewed. No backend or existing web files are changed by this Android project.
+The complete codex/reality-android branch contains native Android, the existing web client, the previously identified four Java repairs, real account APIs, owner-scoped services, public health, Docker/cloud configuration and free Render + Neon instructions. The 18 original business routes retain their JSON contracts; four account routes and health make 23 routes across eight controllers.
 
-## Execution environment
+Authentication/cloud changes require new verification. Results from the earlier anonymous Android version do not establish successful verification of this update.
 
-Local Windows execution recovered after an initial helper failure. A workspace-local Android SDK and Gradle cache are used with JDK 21; GitHub Actions independently uses JDK 17. Bytecode targets Java 17. SDK 36, Gradle 8.13, AGP 8.13.2, Kotlin 2.2.21 and compatible Compose BOM 2026.04.01 are pinned. OkHttp 5.4.0 is a stable version compatible with SDK 36; its published AAR metadata was checked. CI also runs Compose tests on an emulator.
+## Current update status
 
-## Current status
-
-GitHub Actions run [37898966489](https://github.com/Kij0007/Reality/actions/runs/37898966489), code commit 91888b1de829b869d6c557de288ca214b2dd8371, passed both the build and emulator jobs:
-
-| Check | Result |
+| Check | Current result |
 |---|---|
-| Gradle configuration and assembleDebug | PASS; real debug APK generated |
-| assembleDebugAndroidTest | PASS; instrumentation APK compiled |
-| JVM tests | PASS: 67 passed, 0 failures/errors, 1 opt-in live test skipped |
-| lintDebug | PASS: 0 errors, 27 warnings |
-| assembleRelease with R8/resource shrinking | PASS; unsigned compile check with a temporary HTTPS URL, no production service contacted |
-| connectedDebugAndroidTest | PASS: 4 tests on Android API 35 x86_64 Pixel 2 emulator |
-| Native screenshots | PASS: 6 valid 1080 x 1920 PNG captures, visually inspected |
-| Debug APK signature | PASS: Android APK Signature Scheme v2 verified |
-| Android Studio graphical sync | Not run; command-line Gradle configuration/build was verified |
+| Android configuration / assembleDebug | PENDING new account version build |
+| assembleDebugAndroidTest | PENDING new account version build |
+| JVM tests including authentication | PENDING new account version execution |
+| lintDebug | PENDING new account version execution |
+| Release R8/resource shrinking | PENDING new account version execution |
+| Connected emulator tests/current screenshots | PENDING new account startup execution |
+| Backend Maven verify/H2 accounts and ownership | PASS locally: 21 tests, zero failures/errors/skips, including authentication, throttling and two-user ownership |
+| Browser API/auth regression tests | PASS locally: eight Node tests covering all 18 business contracts, account routes, session invalidation, stale data and duplicate/uncertain writes |
+| Docker/512 MB real PostgreSQL smoke | PENDING Reality Cloud workflow; local Docker CLI unavailable |
+| Live Render/Neon provisioning | NOT PERFORMED; no live URL claimed |
+| Android Studio graphical sync | NOT RUN; command-line build is the compilation check |
 
-Tests cover all 18 API contracts, request bodies/statuses, error parsing, validation, timers/time zones, duplicate writes, configuration locking, settings-disk recovery, saved forms, stale data, request cancellation, report filters, break controls, actual Hilt application startup, navigation and local form validation. Of the 27 lint warnings, 26 concern newer dependency/SDK releases and one flags intentional debug-only cleartext HTTP for emulator/LAN development. Release blocks cleartext. The compatible SDK 36 toolchain is deliberately pinned; no lint baseline or warning suppression is used.
+Replace pending results only with actual completed evidence. Reality Cloud CI verifies Maven/H2 tests, Docker build, real PostgreSQL routes/ownership and packaged web resources, and records memory/startup evidence. Android CI builds/tests/lints debug and release, runs an emulator, and packages source/APK artifacts.
 
-The independently openable source archive contains all 89 files, includes the wrapper JAR and executable Unix wrapper, and excludes build caches, machine-specific SDK paths and private signing files. Six native screenshots were exported during instrumentation before AGP uninstalled the debug app; CI validated their PNG structure. Home, Activities, Create Activity, Track, More and Settings were visually inspected in the offline/form state. These captures do not represent successful real database operations or a visual test of every populated screen.
+Local backend evidence is in `target/surefire-reports/`: one application-context test, six authentication tests, six limiter unit tests, one throttle integration test, and seven ownership tests. Browser regression coverage is in `scripts/web-api.test.mjs`; it uses test doubles and does not establish successful rendering in a real browser. H2 tests establish backend behavior in isolation; actual PostgreSQL/container and Android validation remain separate pending checks.
 
-Local Windows assembleDebug was attempted with JDK 21, including a shorter source path and two workers. Its native AAPT2 linker exited unexpectedly without an error message; the independent Linux Android build and emulator tests above passed. The failure is recorded rather than reported as a successful local build.
+## Historical Android baseline
 
-## Backend end-to-end limitations
+Before accounts/cloud changes, [GitHub Actions run 37898966489](https://github.com/Kij0007/Reality/actions/runs/37898966489) passed build/emulator jobs at 91888b1de829b869d6c557de288ca214b2dd8371. It covered debug/instrumentation APK builds, JVM tests, lint with zero errors, unsigned release R8, four connected emulator tests, APK signature verification and six valid native screenshots. This is historical evidence, not a claim that the current authentication version passed.
 
-The opt-in LiveBackendFlowTest was compiled and executed using the Android client's actual Retrofit interfaces and DTOs in a temporary JVM verification harness. Connection to both localhost:8081 and 127.0.0.1:8081 was refused before the first create request could reach Spring Boot. No test records were created. Real PostgreSQL persistence, server break/stop behavior and server-generated reports could therefore not be verified in this run.
+That baseline covered API serialization, validation, timers/timezones, duplicate mutations, settings/configuration locking/recovery, saved forms, stale data, cancellation, report filters, break controls, Hilt startup and navigation. Runtime production data never comes from the test fixtures.
 
-The test exercises all 18 endpoints, waits for a genuine one-minute session, and cleans up uniquely named records through APIs when a server is available. To run it from the Android project in PowerShell:
+## Earlier live-server limitation
 
-```powershell
-$env:REALITY_TEST_BASE_URL = 'http://localhost:8081/'
-.\gradlew.bat testDebugUnitTest --tests 'com.reality.android.integration.LiveBackendFlowTest'
-```
+The earlier opt-in LiveBackendFlowTest used actual Retrofit interfaces/DTOs. Both localhost:8081 and 127.0.0.1:8081 refused the connection before the first POST, so no test records were created and PC PostgreSQL persistence was not verified then. An unavailable server is not a successful end-to-end test.
 
-Ordinary CI tests skip this opt-in live test and do not write to a database. MockWebServer fixtures are confined to tests; runtime repositories use real Retrofit APIs without a mock fallback. Start the complete backend, confirm its activities API, and repeat the live flow for deployment verification.
+The current cloud smoke script exercises actual Spring Boot and ephemeral PostgreSQL: two-account signup/login, every method/path route, bidirectional ownership, activity edit, session break/resume/stop/delete, progress/streak/monthly JSON, static resources and token revocation. It does not fabricate responses. Its current result remains pending until CI completes.
 
-BACKEND_INTEGRATION.md identifies the existing main-branch backend limitations separately. A passing Android build does not repair or validate an unavailable Spring Boot deployment.
+Free accounts and a real deployment are separate external steps. A successful container/Android build does not create a public URL. Local records are not automatically imported or inherited by the first cloud account; migration is an explicit administrator operation.

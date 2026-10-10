@@ -2,6 +2,7 @@ package com.reality.android.di
 
 import com.reality.android.BuildConfig
 import com.reality.android.core.network.BackendUrlInterceptor
+import com.reality.android.core.network.AuthInterceptor
 import com.reality.android.data.remote.api.*
 import dagger.Module
 import dagger.Provides
@@ -30,7 +31,7 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun okHttp(urlInterceptor: BackendUrlInterceptor): OkHttpClient =
+    fun okHttp(urlInterceptor: BackendUrlInterceptor, authInterceptor: AuthInterceptor): OkHttpClient =
         OkHttpClient.Builder()
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(20, TimeUnit.SECONDS)
@@ -40,8 +41,10 @@ object NetworkModule {
             .followRedirects(false)
             .followSslRedirects(false)
             .addInterceptor(urlInterceptor)
+            .addInterceptor(authInterceptor)
             .apply {
                 if (BuildConfig.DEBUG) addInterceptor(HttpLoggingInterceptor().apply {
+                    redactHeader("Authorization")
                     level = HttpLoggingInterceptor.Level.BASIC
                 })
             }
@@ -62,4 +65,5 @@ object NetworkModule {
     @Provides fun dailyProgressApi(retrofit: Retrofit): DailyProgressApi = retrofit.create(DailyProgressApi::class.java)
     @Provides fun streakApi(retrofit: Retrofit): StreakApi = retrofit.create(StreakApi::class.java)
     @Provides fun reportApi(retrofit: Retrofit): ReportApi = retrofit.create(ReportApi::class.java)
+    @Provides fun authApi(retrofit: Retrofit): AuthApi = retrofit.create(AuthApi::class.java)
 }

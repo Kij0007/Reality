@@ -1,6 +1,6 @@
 # Reality feature parity
 
-Scope: all 18 APIs from the six controllers at inspected revision 09a7660d023c8e6d8a7c681c26daf7540d04ed18. Web behavior refers to the web client previously delivered in this task; no web source is currently committed to main.
+Scope: 18 original business routes plus four account APIs and public health, across eight controllers on codex/reality-android. Original authority: 09a7660d023c8e6d8a7c681c26daf7540d04ed18. This branch includes the web client, real accounts, ownership and Android; cloud provisioning is separate.
 
 | Existing Reality feature | Backend support | Web support | Android support | Notes |
 |---|---|---|---|---|
@@ -36,7 +36,17 @@ Scope: all 18 APIs from the six controllers at inspected revision 09a7660d023c8e
 | Destructive confirmations | Client UX | Dialogs | Material dialogs | API remains authoritative |
 | Theme preference | Client-only | Existing visual theme | System/light/dark | DataStore; not a backend feature |
 | Backend URL/server-zone preference | Client-only | Same-origin root | Settings | One configured service, no database access |
-| Login/registration/token storage | Not present | Not present | Not invented | Deployment protection remains backend responsibility |
+| Registration/sign-in | POST register/login | Account forms | Native AuthScreen | Server IDs, validation, BCrypt and opaque bearer |
+| Restore account identity | GET api/auth/me | Session gate | Startup validation | User is tied to the current token |
+| Logout/token revocation | POST api/auth/logout | Sign out | Settings AccountCard | 204; network failure is not fake success |
+| Account-isolated data | Owner-scoped services/repositories | Signed-in user's records | Signed-in user's records | Foreign/unowned IDs return 404 |
+| Encrypted Android session | 30-day opaque bearer | Browser session handling | Keystore AES-GCM + DataStore | No persisted passwords; matching 401 clears token |
+| Backend-bound authentication | Token identifies one backend | Same-origin API | Configured-backend-bound session | Old token not reused on another server |
+| Health/free-host warmup | GET api/health | Connection/startup flow | Settings test/account warmup | Read-only warmup up to 120 seconds; health does not query DB |
+| Password-request throttling | Register/login filter | Readable 429 error | Readable 429 error | 60 requests/minute and four concurrent password requests per server instance; no automatic write retry |
+| Free online packaging | Docker/cloud/Render Blueprint | JAR-packaged static resources | Configurable HTTPS URL | Render Free + Neon Free; no already-provisioned URL |
+| Legacy owner migration | Nullable owner_id, guarded queries | Reviewed admin migration | Reviewed admin migration | First signup inherits nothing; no auto import |
+| Password reset/email verification/account delete | Not present | Not invented | Not invented | No unsupported account/email APIs |
 | Reactivation/restore | Not present | Not present | Not invented | Delete means inactive; no restore API |
 | Weekly/category/global statistics | Not present | Not present | Not invented | No unsupported analytics or demo charts |
 

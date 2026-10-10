@@ -4,29 +4,29 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.reality.dto.DailyProgressResponseDTO;
 import com.reality.dto.StreakResponseDTO;
 import com.reality.entity.Activity;
-import com.reality.exception.ResourceNotFoundException;
-import com.reality.repository.ActivityRepository;
 import com.reality.services.DailyProgressService;
 import com.reality.services.StreakService;
+import com.reality.services.OwnedResources;
 
 @Service
+@Transactional(readOnly = true)
 public class StreakServiceImpl
         implements StreakService {
 
-    private final ActivityRepository activityRepository;
+    private final OwnedResources owned;
 
     private final DailyProgressService dailyProgressService;
 
     public StreakServiceImpl(
-            ActivityRepository activityRepository,
+            OwnedResources owned,
             DailyProgressService dailyProgressService) {
 
-        this.activityRepository =
-                activityRepository;
+        this.owned = owned;
 
         this.dailyProgressService =
                 dailyProgressService;
@@ -44,13 +44,7 @@ public class StreakServiceImpl
         // 1. FIND ACTIVITY
         // --------------------------------------------
 
-        Activity activity =
-                activityRepository
-                        .findByIdAndActiveTrue(activityId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Active activity not found with id: "
-                                                + activityId));
+        Activity activity = owned.activeActivity(activityId);
 
         /*
          * Today is still in progress.

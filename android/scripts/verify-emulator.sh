@@ -10,7 +10,7 @@ capture_dir="/sdcard/Download/RealityVerification-$(date +%s)-$$"
 report_dir=app/build/reports/androidTests/screenshots
 mkdir -p "$report_dir"
 capture_status=0
-for screen in home settings activities tracking form more; do
+for screen in login settings register validation; do
   temporary="$report_dir/$screen.png.tmp"
   rm -f "$temporary" "$report_dir/$screen.png"
   if ! adb pull "$capture_dir/verification-$screen.png" "$temporary"; then

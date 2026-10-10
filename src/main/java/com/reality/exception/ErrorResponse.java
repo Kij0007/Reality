@@ -2,12 +2,10 @@ package com.reality.exception;
 
 import java.time.LocalDateTime;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 
 
 
-@AllArgsConstructor
 @Builder
 public class ErrorResponse {
 	

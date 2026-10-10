@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Reality — your commitments, sessions, and progress in one place.">
+  <meta name="color-scheme" content="light">
+  <title>Reality · Dashboard</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="stylesheet" href="./css/styles.css">
+  <script type="module" src="./js/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <section id="auth-screen" class="auth-screen" aria-labelledby="auth-title">
+    <div class="auth-card">
+      <div class="brand auth-brand"><span class="brand-mark" aria-hidden="true">r.</span><span>Reality<span class="brand-subtitle">KEEP YOUR COMMITMENTS</span></span></div>
+      <p class="eyebrow">YOUR OWN SPACE TO SHOW UP</p>
+      <h1 id="auth-title">Welcome back.</h1>
+      <p id="auth-description" class="muted">Sign in to your activities, sessions, and progress.</p>
+      <div class="auth-tabs" aria-label="Account options">
+        <button type="button" id="auth-login-tab" class="button button-primary" aria-pressed="true">Sign in</button>
+        <button type="button" id="auth-register-tab" class="button button-secondary" aria-pressed="false">Create account</button>
+      </div>
+      <form id="auth-form">
+        <fieldset id="auth-fields" class="auth-fields">
+          <label class="field">Username<input id="auth-username" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required minlength="3" maxlength="40" pattern="[A-Za-z0-9_.\-]{3,40}" aria-describedby="username-help"></label>
+          <p id="username-help" class="form-note">3–40 letters, numbers, dots, underscores, or hyphens.</p>
+          <label id="display-name-field" class="field" hidden>Display name<input id="auth-display-name" name="displayName" autocomplete="nickname" maxlength="80" disabled></label>
+          <label class="field">Password<input id="auth-password" name="password" type="password" autocomplete="current-password" required aria-describedby="password-help"></label>
+          <p id="password-help" class="form-note" hidden>Use at least 12 characters, up to 72 UTF-8 bytes.</p>
+          <label class="auth-password-toggle"><input type="checkbox" id="show-password">Show password</label>
+        </fieldset>
+        <div id="auth-error" class="auth-error" role="alert" hidden></div>
+        <button type="submit" id="auth-submit" class="button button-primary auth-submit">Sign in</button>
+      </form>
+      <p id="auth-status" class="auth-status muted" role="status">Connecting to Reality…</p>
+      <button type="button" id="auth-retry" class="button button-secondary auth-submit" hidden>Retry connection</button>
+      <p class="auth-privacy muted">Your account keeps your activities and progress separate from other users.</p>
+    </div>
+  </section>
+  <div class="app-layout" id="authenticated-app" hidden>
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+      <a class="brand" href="#dashboard" aria-label="Reality dashboard"><span class="brand-mark" aria-hidden="true">r.</span><span>Reality<span class="brand-subtitle">KEEP YOUR COMMITMENTS</span></span></a>
+      <div class="sidebar-section-label">WORKSPACE</div>
+      <nav id="main-navigation">
+        <a class="nav-link" href="#dashboard" data-page="dashboard"><span class="nav-icon" aria-hidden="true">▦</span>Dashboard</a>
+        <a class="nav-link" href="#activities" data-page="activities"><span class="nav-icon" aria-hidden="true">◈</span>Activities<span class="nav-count" id="nav-activity-count"></span></a>
+        <a class="nav-link" href="#schedule" data-page="schedule"><span class="nav-icon" aria-hidden="true">▤</span>Schedule</a>
+        <a class="nav-link" href="#sessions" data-page="sessions"><span class="nav-icon" aria-hidden="true">◷</span>Sessions<span class="nav-count" id="nav-session-count"></span></a>
+        <a class="nav-link" href="#progress" data-page="progress"><span class="nav-icon" aria-hidden="true">↗</span>Progress & streaks</a>
+        <a class="nav-link" href="#reports" data-page="reports"><span class="nav-icon" aria-hidden="true">▥</span>Reports</a>
+      </nav>
+      <div class="sidebar-bottom account-panel"><div><strong id="account-display-name"></strong><p id="account-username"></p></div><button type="button" id="sign-out" class="button button-secondary button-small">Sign out</button></div>
+    </aside>
+    <div class="main-shell">
+      <header class="topbar"><div class="topbar-title"><button type="button" id="menu-toggle" class="icon-button menu-toggle" aria-controls="sidebar" aria-expanded="false" aria-label="Toggle navigation">☰</button><span class="breadcrumb">Workspace <span aria-hidden="true">/</span> <strong id="page-title">Dashboard</strong></span></div><div class="topbar-actions"><span id="connection-status" class="connection-status" role="status"><span class="connection-dot"></span>Connecting</span><button type="button" id="refresh-data" class="button button-secondary button-small">Refresh data</button></div></header>
+      <div id="connection-error" class="connection-error" aria-live="polite"></div>
+      <main id="main-content" tabindex="-1"><div id="view" aria-live="polite"><div class="loading-state" role="status"><span class="spinner" aria-hidden="true"></span>Connecting to Reality…</div></div></main>
+      <footer class="app-footer"><span>Reality</span><span id="last-updated">Your data, your progress.</span></footer>
+    </div>
+  </div>
+  <div id="navigation-backdrop" class="navigation-backdrop" hidden></div>
+  <div id="notifications" class="notifications" aria-label="Notifications" aria-live="polite"></div>
+  <dialog id="app-dialog" aria-labelledby="dialog-title"></dialog>
+  <noscript><div class="noscript">Reality needs JavaScript enabled to communicate with your backend.</div></noscript>
+</body>
+</html>

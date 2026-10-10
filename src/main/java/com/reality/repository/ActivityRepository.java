@@ -13,8 +13,10 @@ import com.reality.entity.Activity;
 public interface ActivityRepository extends JpaRepository<Activity, Long> {
 	
 	
-	List<Activity> findByActiveTrue();
+	List<Activity> findByOwnerIdAndActiveTrue(Long ownerId);
 	
-	Optional<Activity> findByIdAndActiveTrue(Long id);
+	Optional<Activity> findByIdAndOwnerIdAndActiveTrue(Long id, Long ownerId);
+
+    Optional<Activity> findByIdAndOwnerId(Long id, Long ownerId);
 
 }

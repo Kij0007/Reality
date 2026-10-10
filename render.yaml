@@ -1,0 +1,24 @@
+# External PostgreSQL is Neon Free. No Render database or paid resource is created.
+services:
+  - type: web
+    name: reality
+    runtime: docker
+    plan: free
+    region: singapore
+    repo: https://github.com/Kij0007/Reality
+    branch: codex/reality-android
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: cloud
+      - key: TZ
+        value: Asia/Kolkata
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_USERNAME
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false

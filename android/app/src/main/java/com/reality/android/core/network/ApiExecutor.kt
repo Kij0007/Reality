@@ -61,7 +61,7 @@ class ApiExecutor @Inject constructor(private val json: Json) {
             status >= 500 -> "The Reality server could not complete this request. Try refreshing; if it persists, check the backend log."
             readable != null -> readable
             status == 400 || status == 422 -> "The server rejected the input. Check the entered values."
-            status == 401 -> "The server requires authentication. This backend version does not expose an app login API."
+            status == 401 -> "Your sign-in expired. Please sign in again."
             status == 403 -> "The server denied access to this operation."
             status == 404 -> "The requested record or endpoint was not found. Refresh your data and check the backend address."
             status == 409 -> "The operation conflicts with the current server state. Refresh before trying again."

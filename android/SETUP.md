@@ -1,18 +1,29 @@
 # First run and APK setup
 
-1. Download/check out the codex/reality-android branch of Kij0007/Reality. Keep the existing Spring Boot source and web deployment intact. The new Android project is in android/. If downloading the Android-project workflow artifact, extract its ZIP and open the extracted project folder directly.
-2. In Android Studio choose Open and select android/ (the folder containing settings.gradle.kts). Do not import it as a Maven project.
-3. Select JDK 17 for Gradle in Settings → Build, Execution, Deployment → Build Tools → Gradle. Install SDK Platform 36 and Build Tools 35.0.0 in SDK Manager if Studio requests them. Let the included Gradle wrapper sync dependencies.
-4. Start PostgreSQL and your existing Spring Boot backend. Its configured local port is 8081. In the PC browser verify http://localhost:8081/activities returns a JSON list, including [] for an empty database.
-5. Create/start an Android emulator in Device Manager, API 26 or newer. The default debug base URL http://10.0.2.2:8081/ reaches the development PC. Do not use Android localhost for the PC server.
-6. If a different address is required, set BACKEND_BASE_URL in gradle.properties before building, or use More → Settings → Backend base URL inside the debug app. Save before testing the connection. The server zone defaults to Asia/Kolkata; change Backend clock only when your server uses another JVM zone.
-7. Select the app run configuration and emulator, then Run. Open More → Settings and Test connection to check the actual activities API.
-8. Test a normal flow: create an activity with positive target, category, start date and weekdays; view/edit it; start a session; take a break; resume; finish; view the saved session, daily progress and monthly report. Current streak counts fully finished scheduled days through server yesterday.
-9. Build the debug APK from Android Studio, or run .\gradlew.bat assembleDebug in PowerShell from android/. The output is app/build/outputs/apk/debug/app-debug.apk.
-10. With a device connected through USB debugging, run adb install -r app/build/outputs/apk/debug/app-debug.apk. Alternatively copy that APK to your phone and approve installation from your chosen file-transfer/source app.
-11. For a phone on Wi-Fi, use the PC's LAN IPv4 address, the same trusted network, and a private-network firewall rule for the backend port. Emulator 10.0.2.2 is not the PC address for a physical phone.
-12. For a release build, provide PRODUCTION_BACKEND_BASE_URL using your actual HTTPS deployment, then use Android Studio's signed APK/AAB wizard or the private signing environment variables described in README.md. Keep signing keys/passwords outside Git. An unsigned release APK cannot be installed as-is.
+1. Download/check out the complete `codex/reality-android` branch of `Kij0007/Reality`. It contains the updated Spring Boot account/ownership backend, web client, cloud deployment files and separate `android/` project. The Android-only ZIP does not contain the backend.
+2. In Android Studio choose **Open** and select the Android folder containing `settings.gradle.kts`. Keep it separate from Spring Boot `src/main/resources/static`; do not import Android as Maven.
+3. Select JDK 17 for Gradle under **Settings → Build, Execution, Deployment → Build Tools → Gradle**. Install SDK Platform 36 and Build Tools 35.0.0; sync the included Gradle wrapper. Spring Boot independently requires Java 21.
+4. For the requested online use with your laptop switched off, follow the repository's [free hosting instructions](https://github.com/Kij0007/Reality/blob/codex/reality-android/deployment/README.md) for Neon Free + Render Free. Copy the actual Render HTTPS URL after deployment. No public service has already been provisioned by this project.
+5. Open the deployed origin's `/api/health` and wait for `{"status":"UP"}`. Then open its `/` web page and register/sign in to verify database-backed access. An unauthenticated `/activities` request correctly returns 401; health alone does not establish database readiness.
+6. Connect an Android 8/API 26 or newer phone or start an emulator. With the public HTTPS URL, either can use normal internet access. Your phone does not need the laptop to remain on or use the same network.
+7. Set `BACKEND_BASE_URL` in `gradle.properties` to that public HTTPS origin before building debug, or use the **Settings** icon on the sign-in screen and save it. After sign-in settings are under **More → Settings**. Include a trailing `/`. Never enter Neon JDBC credentials in Android. Keep Backend clock at `Asia/Kolkata` for the Docker/cloud server. The unchanged initial debug default `http://10.0.2.2:8081/` is only for optional local development below.
+8. Choose the `app` run configuration and device, then **Run**. **Test connection** checks public process health. Register with a unique username/display name/password, or sign in. Account submission warms a sleeping server using reads for up to 120 seconds before a single login/register request.
+9. Username accepts 3–40 lowercase ASCII letters/digits/`_.-` after trimming/normalization. Display name is required and at most 80 Unicode code points. Password needs at least 12 code points and at most 72 UTF-8 bytes. The app never saves the password; IDs come from the server.
+10. Create an activity with positive target, category, start date and weekdays; edit it; start a session; break; resume; finish; view history/progress/reports. Streaks evaluate finished scheduled days through server yesterday. Sign out from the Settings account card to revoke the current token.
+11. Register a second account to verify separation. A new cloud database starts empty; legacy PC records are neither copied nor assigned to the first account automatically. See [MIGRATION.md](https://github.com/Kij0007/Reality/blob/codex/reality-android/deployment/MIGRATION.md) for reviewed import/ownership assignment.
+12. Build debug from Studio, or run `.\gradlew.bat assembleDebug` in PowerShell from the Android directory. Output: `app/build/outputs/apk/debug/app-debug.apk`.
+13. With USB debugging enabled, use `adb install -r app/build/outputs/apk/debug/app-debug.apk`, or copy the APK to your phone and allow installation from your transfer/source app.
+14. For release, supply `PRODUCTION_BACKEND_BASE_URL=https://YOUR_ACTUAL_RENDER_HOST/` using the real URL. Use Studio's signed APK/AAB wizard or the private signing environment variables in README.md. Keep signing keys/passwords outside Git. Unsigned release APKs cannot be installed as-is.
 
-Debug and release use different application IDs so development does not replace a signed production installation. A debug build permits HTTP for local testing; release networking blocks cleartext HTTP and never disables certificate validation. APK installation requires Android 8/API 26 or newer.
+Debug/release have different application IDs. Debug permits local HTTP; release requires HTTPS and normal certificate verification. Devices need Android 8/API26+. Switching the configured backend requires a session for that backend; old tokens are never shared between servers.
 
-The existing GitHub backend has no login. Hosting/reachability and protecting a public deployment remain server-side responsibilities; Android does not manufacture an authentication API.
+## Optional development against your PC
+
+This section applies only when you deliberately run a development server on the PC. It is not needed for the hosted application.
+
+1. Start local PostgreSQL, supply `DATABASE_PASSWORD` privately to the Spring Boot process, and start the updated backend. Its default port is 8081. Confirm `http://localhost:8081/api/health` returns `{"status":"UP"}`.
+2. An emulator reaches the PC at `http://10.0.2.2:8081/`, the initial debug default. Android's `localhost` is Android itself.
+3. A physical phone uses `http://PC_LAN_IP:8081/`, replacing the address with the actual Windows `ipconfig` LAN IPv4. Both must be on the same trusted network, and the private-network firewall rule/listening interface must permit access. Emulator `10.0.2.2` does not work on a physical phone.
+4. Register/sign in against this development backend. Its database and accounts are separate from the hosted service. Returning to the public HTTPS origin returns to the hosted data and requires that server's account.
+
+If a write times out, inspect/refresh server state before repeating it; the operation may have committed. There is no offline write queue, email verification, self-service forgotten-password, social-login or account-delete endpoint.

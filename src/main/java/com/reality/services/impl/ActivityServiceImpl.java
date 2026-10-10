@@ -4,22 +4,29 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.reality.dto.ActivityRequestDTO;
 import com.reality.dto.ActivityResponseDTO;
 import com.reality.entity.Activity;
 import com.reality.exception.InvalidActivityException;
-import com.reality.exception.ResourceNotFoundException;
 import com.reality.repository.ActivityRepository;
+import com.reality.repository.UserAccountRepository;
 import com.reality.services.ActivityService;
+import com.reality.services.OwnedResources;
 
 @Service
+@Transactional(readOnly = true)
 public class ActivityServiceImpl implements ActivityService {
 
     private final ActivityRepository activityRepository;
+    private final UserAccountRepository users;
+    private final OwnedResources owned;
 
-    public ActivityServiceImpl(ActivityRepository activityRepository) {
+    public ActivityServiceImpl(ActivityRepository activityRepository, UserAccountRepository users, OwnedResources owned) {
         this.activityRepository = activityRepository;
+        this.users = users;
+        this.owned = owned;
     }
 
     // ------------------------------------------------
@@ -27,12 +34,14 @@ public class ActivityServiceImpl implements ActivityService {
     // ------------------------------------------------
 
     @Override
+    @Transactional
     public ActivityResponseDTO createActivity(
             ActivityRequestDTO request) {
 
         validateActivityRequest(request);
 
         Activity activity = new Activity();
+        activity.setOwner(users.getReferenceById(owned.ownerId()));
 
         activity.setName(request.getName());
 
@@ -64,7 +73,7 @@ public class ActivityServiceImpl implements ActivityService {
     public List<ActivityResponseDTO> getAllActivities() {
 
         List<Activity> activities =
-                activityRepository.findByActiveTrue();
+                activityRepository.findByOwnerIdAndActiveTrue(owned.ownerId());
 
         return activities.stream()
                 .map(this::mapToResponseDTO)
@@ -78,13 +87,7 @@ public class ActivityServiceImpl implements ActivityService {
     @Override
     public ActivityResponseDTO getActivityById(Long id) {
 
-        Activity activity =
-                activityRepository
-                        .findByIdAndActiveTrue(id)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Active activity not found with id: "
-                                                + id));
+        Activity activity = owned.activeActivity(id);
 
         return mapToResponseDTO(activity);
     }
@@ -94,19 +97,13 @@ public class ActivityServiceImpl implements ActivityService {
     // ------------------------------------------------
 
     @Override
+    @Transactional
     public ActivityResponseDTO updateActivity(
             Long id,
             ActivityRequestDTO request) {
 
+        Activity activity = owned.activeActivity(id);
         validateActivityRequest(request);
-
-        Activity activity =
-                activityRepository
-                        .findByIdAndActiveTrue(id)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Active activity not found with id: "
-                                                + id));
 
         activity.setName(
                 request.getName());
@@ -135,15 +132,10 @@ public class ActivityServiceImpl implements ActivityService {
     // ------------------------------------------------
 
     @Override
+    @Transactional
     public void deleteActivity(Long id) {
 
-        Activity activity =
-                activityRepository
-                        .findByIdAndActiveTrue(id)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Active activity not found with id: "
-                                                + id));
+        Activity activity = owned.activeActivity(id);
 
         activity.setActive(false);
 
@@ -207,7 +199,7 @@ public class ActivityServiceImpl implements ActivityService {
                 activity.getStartDate());
 
         response.setScheduledDays(
-                activity.getScheduledDays());
+                new HashSet<>(activity.getScheduledDays()));
 
         response.setCreatedAt(
                 activity.getCreatedAt());
