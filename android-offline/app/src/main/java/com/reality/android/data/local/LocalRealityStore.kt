@@ -27,7 +27,9 @@ class LocalRealityStore @Inject constructor(private val database: RealityDatabas
 
     suspend fun replaceAll(snapshot: LocalSnapshot, zoneId: String? = null) = database.withTransaction {
         RealityCalculations.validateReferences(snapshot)
-        zoneId?.let { ZoneId.of(it) }
+        if (zoneId != null && runCatching { ZoneId.of(zoneId) }.isFailure) {
+            throw LocalDataException("The backup timezone is invalid.")
+        }
         val oldMetadata = dao.metadata() ?: LocalMetadataEntity()
         dao.clearBreaks()
         dao.clearSessions()
@@ -159,3 +161,4 @@ class LocalRealityStore @Inject constructor(private val database: RealityDatabas
     private fun sessionTimes(session: LocalSessionEntity, breaks: List<LocalBreakEntity>): List<String> =
         listOf(session.startTime) + breaks.flatMap { listOfNotNull(it.startTime, it.endTime) }
 }
+

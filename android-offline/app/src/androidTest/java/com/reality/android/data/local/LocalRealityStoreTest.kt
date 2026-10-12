@@ -70,6 +70,8 @@ class LocalRealityStoreTest {
         assertEquals(session.id, store.sessions().single().id)
         assertThrowsSuspend { store.replaceAll(snapshot, "Invalid/Zone") }
         assertEquals(snapshot, store.snapshot())
+        assertEquals("Asia/Kolkata", store.timezone())
+        assertEquals(0L, store.revision.first())
     }
 
     @Test fun restoredIdsTimezoneAndRevisionCommitTogetherAndNewIdsDoNotCollide() = runBlocking {
@@ -113,3 +115,4 @@ class LocalRealityStoreTest {
         assertTrue("Expected invalid state/data to be rejected", thrown)
     }
 }
+

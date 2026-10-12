@@ -206,7 +206,9 @@ class StartupNavigationTest {
         compose.onNode(hasText(name) and hasClickAction()).performClick()
         awaitText(R.string.wf_report)
         clickScrollableButton(R.string.wf_report)
-        awaitText(R.string.insights_completion)
+        awaitText(R.string.insights_reports)
+        scrollListTo(R.string.insights_completion)
+        compose.onNodeWithText(text(R.string.insights_completion)).assertIsDisplayed()
         scrollListTo(R.string.insights_finished_sessions)
         compose.onNodeWithText(text(R.string.insights_finished_sessions)).assertIsDisplayed()
         screenshot("report")
@@ -216,4 +218,5 @@ class StartupNavigationTest {
         assertEquals(stopped.duration, report.totalDuration)
     }
 }
+
 

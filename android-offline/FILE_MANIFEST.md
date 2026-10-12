@@ -1,14 +1,15 @@
 # Reality Offline file manifest
 
-This is the independently openable Android project in android-offline. **93 source/configuration/resource/document files** are listed below, including this manifest and the binary Gradle wrapper JAR. The source ZIP is delivered as Reality-Offline.zip; the installable artifact is Reality-Offline-debug.apk.
+This is the independently openable Android project in android-offline. **96 source/configuration/resource/document files** are listed below, including this manifest and the binary Gradle wrapper JAR. The source ZIP is delivered as Reality-Offline.zip; the installable artifact is Reality-Offline-debug.apk.
 
-Open the extracted directory containing settings.gradle.kts in Android Studio. None of these files belongs under Spring Boot src/main/resources/static. Local build/cache directories, local.properties, private keys/passwords and personal backup JSON files are excluded. Generated build outputs and later exported Room schemas can add local files without changing the runtime source layout.
+Open the extracted directory containing settings.gradle.kts in Android Studio. None of these files belongs under Spring Boot src/main/resources/static. Local build/cache directories, local.properties, private keys/passwords and personal backup JSON files are excluded. The generated Room version 1 schema is included so future database migrations can be reviewed. Build outputs and caches are excluded.
 
 ```text
 android-offline/.gitattributes
 android-offline/.gitignore
 android-offline/app/build.gradle.kts
 android-offline/app/proguard-rules.pro
+android-offline/app/schemas/com.reality.android.data.local.RealityDatabase/1.json
 android-offline/app/src/androidTest/java/com/reality/android/data/backup/BackupRepositoryTest.kt
 android-offline/app/src/androidTest/java/com/reality/android/data/local/LocalRealityStoreTest.kt
 android-offline/app/src/androidTest/java/com/reality/android/ui/StartupNavigationTest.kt
@@ -17,6 +18,7 @@ android-offline/app/src/main/AndroidManifest.xml
 android-offline/app/src/main/java/com/reality/android/core/network/ApiResult.kt
 android-offline/app/src/main/java/com/reality/android/core/network/MutationGate.kt
 android-offline/app/src/main/java/com/reality/android/core/util/ActivityValidation.kt
+android-offline/app/src/main/java/com/reality/android/core/util/RealityBreakTime.kt
 android-offline/app/src/main/java/com/reality/android/core/util/RealityTime.kt
 android-offline/app/src/main/java/com/reality/android/data/backup/BackupRepository.kt
 android-offline/app/src/main/java/com/reality/android/data/backup/RealityBackup.kt
@@ -67,6 +69,7 @@ android-offline/app/src/main/res/values/strings_workflows.xml
 android-offline/app/src/main/res/values/strings.xml
 android-offline/app/src/main/res/values/themes.xml
 android-offline/app/src/main/res/xml/data_extraction_rules.xml
+android-offline/app/src/test/java/com/reality/android/core/RealityBreakTimeTest.kt
 android-offline/app/src/test/java/com/reality/android/core/RealityRulesTest.kt
 android-offline/app/src/test/java/com/reality/android/data/BackupCodecTest.kt
 android-offline/app/src/test/java/com/reality/android/data/local/RealityCalculationsTest.kt
