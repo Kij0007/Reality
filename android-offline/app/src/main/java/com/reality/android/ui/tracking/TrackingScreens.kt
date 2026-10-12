@@ -45,6 +45,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.reality.android.R
+import com.reality.android.core.util.breakDisplaySeconds
 import com.reality.android.core.util.formatDateTime
 import com.reality.android.core.util.formatDuration
 import com.reality.android.core.util.liveWorkingSeconds
@@ -55,10 +56,7 @@ import com.reality.android.ui.activities.DestructiveConfirmation
 import com.reality.android.ui.activities.WorkflowDateInput
 import com.reality.android.ui.activities.WorkflowEmpty
 import com.reality.android.ui.activities.WorkflowError
-import java.time.Duration
 import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -360,9 +358,10 @@ fun SessionDetailScreen(
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(stringResource(R.string.wf_started_at, formatDateTime(entry.startTime)))
                         Text(entry.endTime?.let { stringResource(R.string.wf_resumed_at, formatDateTime(it)) }
+                            ?: state.session?.endTime?.let { stringResource(R.string.wf_stopped_at, formatDateTime(it)) }
                             ?: stringResource(R.string.wf_break_in_progress))
                         entry.description?.takeIf { it.isNotBlank() }?.let { Text(it) }
-                        BreakDuration(entry, state.zoneId)
+                        BreakDuration(entry, state.session?.endTime, state.zoneId)
                     }
                 }
             }
@@ -382,14 +381,11 @@ fun SessionDetailScreen(
 }
 
 @Composable
-private fun BreakDuration(entry: BreakDto, zoneId: String) {
-    val now by produceState(initialValue = Instant.now(), entry.id, entry.endTime) {
-        while (entry.endTime == null) { value = Instant.now(); delay(1_000) }
+private fun BreakDuration(entry: BreakDto, sessionEnd: String?, zoneId: String) {
+    val now by produceState(initialValue = Instant.now(), entry.id, entry.endTime, sessionEnd) {
+        while (entry.endTime == null && sessionEnd == null) { value = Instant.now(); delay(1_000) }
     }
-    val seconds = if (entry.endTime != null) entry.duration else runCatching {
-        Duration.between(LocalDateTime.parse(entry.startTime).atZone(ZoneId.of(zoneId)).toInstant(), now)
-            .seconds.coerceAtLeast(0)
-    }.getOrNull()
+    val seconds = breakDisplaySeconds(entry, sessionEnd, zoneId, now)
     Text(seconds?.let { formatDuration(it) } ?: stringResource(R.string.wf_duration_unavailable))
 }
 
@@ -400,3 +396,4 @@ internal fun statusLabel(status: SessionStatus): Int = when (status) {
     SessionStatus.STOPPED -> R.string.wf_status_stopped
     SessionStatus.UNKNOWN -> R.string.wf_status_unknown
 }
+
