@@ -21,7 +21,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: reality-offline-${{ github.ref }}
+  group: reality-offline-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 jobs:
   verify:
@@ -45,6 +45,8 @@ jobs:
         run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
       - name: Verify Gradle wrapper integrity
         run: echo "81a82aaea5abcc8ff68b3dfcb58b3c3c429378efd98e7433460610fecd7ae45f  gradle/wrapper/gradle-wrapper.jar" | sha256sum --check
+      - name: Verify localhost exporter safety
+        run: python3 ../scripts/test_export_localhost.py
       - name: Build offline app and UI test APKs, unit tests, and lint
         run: ./gradlew --no-daemon assembleDebug assembleDebugAndroidTest testDebugUnitTest lintDebug
       - name: Verify unsigned release minification
@@ -186,3 +188,4 @@ jobs:
           path: |
             android-offline/app/build/reports/androidTests/
             android-offline/app/build/outputs/androidTest-results/
+

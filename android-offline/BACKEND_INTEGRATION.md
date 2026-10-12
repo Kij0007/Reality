@@ -54,9 +54,16 @@ The PC migration utility is a one-time operation executed on the PC against Post
 
 The JSON root contains app="Reality", schemaVersion=1, exportedAt (UTC Instant), timeZone (ZoneId), source, activities, sessions, breaks and optional streaks. The three record arrays use the fields listed above. streaks contains activityId, activityName, currentStreak and lastEvaluatedDate; these snapshots are comparison evidence, not the future source of truth.
 
-The importer accepts version 1 UTF-8 JSON, at most 20 MiB and 200,000 combined records. It checks unique positive IDs, parent relationships, enum/date/timestamp formats, required activity metadata, nonnegative durations and consistent break/session intervals. Multiple running sessions are preserved because the original backend allows them. Passwords, account records, tokens and PostgreSQL credentials are excluded.
+The importer accepts version 1 UTF-8 JSON, at most 20 MiB and 200,000 combined records. It checks unique positive IDs, parent relationships, enum/date/timestamp formats, required active-activity metadata, nonnegative durations and consistent break/session intervals. Older inactive activities may retain nullable name/category/target/startDate/scheduledDays fields without losing their related history. Legacy unfinished breaks inside finished sessions are retained as recorded; overlap calculations use the containing session's end when needed. Multiple running sessions are preserved because the original backend allows them. Passwords, account records, tokens and PostgreSQL credentials are excluded.
 
 After user confirmation, one Room transaction replaces breaks, sessions and activities while retaining original IDs and setting the source timezone. An import generation change recreates the business navigation state, so prior records are not displayed after restoration. Subsequent local inserts use fresh database IDs. Existing PC data is not altered or synchronized.
 
 The D:/Commitment_tracker/reality source inspected during migration contains an earlier incomplete Activity-only module and differs from the complete backend used to build this client. Its activity entity lacks schedule/startDate, and its listing uses findAll. Use the actual running application's database, not an assumed source-folder match; missing history cannot be invented.
+
+## Verified personal migration snapshot
+
+The actual localhost database behind the running application was exported read-only on 13 October 2026: 7 activities (6 inactive), 38 sessions and 27 breaks. BackupCodec decoding/encoding retained every ID, timestamp, nullable field and relationship. The local calculation returned currentStreak=9, matching the export snapshot and actual Spring Boot streak API; all twelve October 2026 report fields matched the actual report API.
+
+The private JSON is delivered separately as Reality-localhost-backup-2026-10-13.json. It is not a runtime fixture, APK asset or public repository file. The export/database checks and standalone calculation checks do not by themselves prove a successful on-phone Room restore; that result is recorded separately in VERIFICATION.md.
+
 

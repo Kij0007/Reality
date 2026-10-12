@@ -9,7 +9,6 @@ import com.reality.android.data.local.LocalRealityStore
 import com.reality.android.data.local.RealityCalculations
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.Instant
-import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -27,7 +26,7 @@ class BackupRepository @Inject constructor(
     suspend fun export(uri: Uri): ApiResult<Unit> = operation {
         val (snapshot, zone) = store.snapshotWithZone()
         val exportedAt = Instant.now()
-        val today = LocalDate.ofInstant(exportedAt, ZoneId.of(zone))
+        val today = exportedAt.atZone(ZoneId.of(zone)).toLocalDate()
         val backup = RealityBackup(
             exportedAt = exportedAt.toString(), timeZone = zone,
             activities = snapshot.activities, sessions = snapshot.sessions, breaks = snapshot.breaks,
@@ -62,3 +61,4 @@ class BackupRepository @Inject constructor(
         catch (_: Exception) { ApiResult.Failure(AppError("The backup could not be read or saved. Check available storage and try again.")) }
     }
 }
+

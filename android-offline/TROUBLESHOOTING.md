@@ -6,7 +6,7 @@ Use Android 8/API 26 or newer. Open the APK using Files and allow installation f
 
 ## Data is empty after installation
 
-The offline app is a separate installation from the online app. It does not automatically read PostgreSQL, the web browser or another Android app's private storage. Export the existing PC records and restore that JSON file from Settings. A new offline installation starts empty.
+The offline app is a separate installation from the online app. It does not automatically read PostgreSQL, the web browser or another Android app's private storage. Import the already supplied Reality-localhost-backup-2026-10-13.json from More → Backup & restore → Choose backup file. It contains the checked 7 activities, 38 sessions and 27 breaks. Export again only if you need newer PC records. A new offline installation starts empty.
 
 ## Restore file is rejected
 
@@ -46,9 +46,12 @@ Android removes app-private data when the app is uninstalled or its storage is c
 
 The one-time export needs the actual PostgreSQL service and correct database connection on the PC. It does not require installing PostgreSQL on the phone. A running localhost web page alone is not proof that its database matches the source folder you selected. Confirm the database used by your running application, keep credentials private, and avoid exporting while mutating records.
 
-Keep reality-export.sql beside Export-Reality-Localhost.ps1. If psql.exe is missing from PATH, pass -PsqlPath with its full PostgreSQL bin path. If a backup file already exists, choose a new output filename or intentionally supply -Force. Database/API/streak mismatch errors mean no file was saved; check ProjectPath, BaseUrl, owner selection and original JVM TimeZone. For an account-enabled server, select your own OwnerId and supply its token privately; shared original data needs no login.
+Keep reality-export.sql beside Export-Reality-Localhost.ps1. If psql.exe is missing from PATH, pass -PsqlPath with its full PostgreSQL bin path. If a backup file already exists, choose a new output filename or intentionally supply -Force. Database/API/streak mismatch errors mean no file was saved; check ProjectPath, BaseUrl, owner selection and original JVM TimeZone. For an account-enabled server, select your own OwnerId and supply its token privately; shared original data needs no login. Unowned legacy rows are hidden by the upgraded APIs and fail the required identity comparison rather than bypassing account isolation.
+
+If your environment cannot execute psql, the optional export-localhost.py fallback needs Python 3.10+ and python -m pip install -r requirements-export.txt. It performs the same read-only export; Python is not needed for the installed Android application or the primary PowerShell/psql option.
 
 ## Android Studio build fails
 
 Open android-offline, not the Spring Boot Maven root. Use JDK 17, SDK Platform 36 and Build Tools 35.0.0, then sync the included wrapper. Initial Gradle downloads need internet. See VERIFICATION.md for the environment in which the supplied APK was actually built and tested.
+
 

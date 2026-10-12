@@ -33,3 +33,4 @@ Daily totals/reports exclude ongoing sessions until finished, as the existing re
 
 Migration does not claim that a stored streak row exists: the backend calculates it from activity targets/start dates/weekdays, finished sessions and breaks. Those source records must all be exported. Backend accounts/passwords/tokens are not copied to the offline app.
 
+
