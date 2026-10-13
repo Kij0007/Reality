@@ -6,7 +6,7 @@ Use Android 8/API 26 or newer. Open the APK using Files and allow installation f
 
 ## Data is empty after installation
 
-The offline app is a separate installation from the online app. It does not automatically read PostgreSQL, the web browser or another Android app's private storage. Import the already supplied Reality-localhost-backup-2026-10-13.json from More → Backup & restore → Choose backup file. It contains the checked 7 activities, 38 sessions and 27 breaks. Export again only if you need newer PC records. A new offline installation starts empty.
+The offline app is a separate installation from the online app. It does not automatically read PostgreSQL, the web browser or another Android app's private storage. Import the already supplied Reality-localhost-backup-2026-10-14.json from More → Backup & restore → Choose backup file. It contains the checked 7 activities, 39 sessions and 28 breaks. Export again only if you need newer PC records. A new offline installation starts empty.
 
 ## Restore file is rejected
 
@@ -52,6 +52,5 @@ If your environment cannot execute psql, the optional export-localhost.py fallba
 
 ## Android Studio build fails
 
-Open android-offline, not the Spring Boot Maven root. Use JDK 17, SDK Platform 36 and Build Tools 35.0.0, then sync the included wrapper. Initial Gradle downloads need internet. See VERIFICATION.md for the environment in which the supplied APK was actually built and tested.
-
+Open the extracted Reality-Offline folder containing settings.gradle.kts. In the repository this folder is named android-offline; the Spring Boot Maven root is a different project. Use JDK 17, SDK Platform 36 and Build Tools 35.0.0, then sync the included wrapper. Initial Gradle downloads need internet. See VERIFICATION.md for the environment in which the supplied APK was actually built and tested.
 

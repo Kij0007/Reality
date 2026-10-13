@@ -12,19 +12,19 @@ The offline app has its own application ID, so installing it does not overwrite 
 
 ## Import the backup already prepared for you
 
-Your current localhost database was exported read-only on **13 October 2026**. The supplied **Reality-localhost-backup-2026-10-13.json** contains **7 activities (including 6 inactive), 38 sessions and 27 breaks**. The active activity's calculated **current streak is 9**, matching the localhost API. All twelve October 2026 monthly-report fields were also compared with the localhost response.
+Your current localhost database was exported read-only on **14 October 2026**. The supplied **Reality-localhost-backup-2026-10-14.json** contains **7 activities (including 6 inactive), 39 sessions and 28 breaks**. The active activity's calculated **current streak is 0**, matching the localhost API through October 13; its **October best streak is 9**. October 13's scheduled target was not completed. All twelve October 2026 monthly-report fields were also compared with the localhost response.
 
 You do not need to run the export script to use this prepared snapshot:
 
-1. Copy Reality-localhost-backup-2026-10-13.json to the phone alongside the APK.
+1. Copy Reality-localhost-backup-2026-10-14.json to the phone alongside the APK.
 2. Install/open Reality Offline.
 3. Open **More → Backup & restore → Choose backup file** and select the JSON.
-4. Review **7 activities, 38 sessions, 27 breaks** and timezone **Asia/Kolkata**.
+4. Review **7 activities, 39 sessions, 28 breaks** and timezone **Asia/Kolkata**.
 5. Tap **Replace and restore**. If you already created phone records, export them first or cancel; restore replaces the whole local dataset.
 6. Open Progress and Reports. Inactive activities remain hidden from the active list but their stored history remains available.
 7. Export a fresh phone backup after checking the imported data. Your laptop, PostgreSQL and Spring Boot can then remain off.
 
-This is a point-in-time copy, not synchronization. If you record more PC sessions after 13 October, create a newer export using the section below. The streak remains a live calculation: later missed scheduled days can change its current value. The personal JSON is supplied separately and is not committed to the public repository or embedded in the APK/source ZIP.
+This is a point-in-time copy, not synchronization. If you record more PC sessions after 14 October, create a newer export using the section below. The streak remains a live calculation: later missed scheduled days can change its current value. The personal JSON is supplied separately and is not committed to the public repository or embedded in the APK/source ZIP.
 
 ## Move existing PC data
 
@@ -86,7 +86,7 @@ Export again periodically, and before uninstalling or clearing the app's storage
 
 ## Android Studio/build
 
-1. Open the android-offline directory containing settings.gradle.kts in Android Studio.
+1. Extract Reality-Offline.zip and open its Reality-Offline folder containing settings.gradle.kts in Android Studio. In the GitHub repository, this project is the android-offline directory.
 2. Select JDK 17 for Gradle. Install SDK Platform 36 and Build Tools 35.0.0.
 3. Sync the included Gradle 8.13 wrapper. Internet is needed for the first build's dependency downloads.
 4. Run the app on an Android 8/API 26 or newer phone/emulator. No backend setup is required.
@@ -104,5 +104,4 @@ adb install -r app\build\outputs\apk\debug\app-debug.apk
 ```
 
 For a release build, use Android Studio's Generate Signed App Bundle or APK wizard with your own keystore. Keep it and its passwords outside Git. No PRODUCTION_BACKEND_BASE_URL or hosting account is used by the offline project.
-
 

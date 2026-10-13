@@ -113,6 +113,5 @@ The complete repository supplies these files under scripts/:
 - requirements-export.txt — pinned optional pg8000 dependency.
 - test_export_localhost.py — exporter tests.
 
-The private existing-data file is supplied separately as Reality-localhost-backup-2026-10-13.json. It is deliberately absent from this manifest, the public repository and the Android source/APK; import it using the native file picker.
-
+The private existing-data file is supplied separately as Reality-localhost-backup-2026-10-14.json. It is deliberately absent from this manifest, the public repository and the Android source/APK; import it using the native file picker.
 

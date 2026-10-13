@@ -62,8 +62,7 @@ The D:/Commitment_tracker/reality source inspected during migration contains an 
 
 ## Verified personal migration snapshot
 
-The actual localhost database behind the running application was exported read-only on 13 October 2026: 7 activities (6 inactive), 38 sessions and 27 breaks. BackupCodec decoding/encoding retained every ID, timestamp, nullable field and relationship. The local calculation returned currentStreak=9, matching the export snapshot and actual Spring Boot streak API; all twelve October 2026 report fields matched the actual report API.
+The actual localhost database behind the running application was exported read-only on 14 October 2026: 7 activities (6 inactive), 39 sessions and 28 breaks. BackupCodec decoding/encoding retained every ID, timestamp, nullable field and relationship. The local calculation returned currentStreak=0 through 13 October, matching the export snapshot and actual Spring Boot streak API. The scheduled target for 13 October was incomplete; the retained October history still produces a monthly longest/best streak of 9. All twelve October 2026 report fields matched the actual report API.
 
-The private JSON is delivered separately as Reality-localhost-backup-2026-10-13.json. It is not a runtime fixture, APK asset or public repository file. The export/database checks and standalone calculation checks do not by themselves prove a successful on-phone Room restore; that result is recorded separately in VERIFICATION.md.
-
+The private JSON is delivered separately as Reality-localhost-backup-2026-10-14.json. It is not a runtime fixture, APK asset or public repository file. The export/database checks and standalone calculation checks do not by themselves prove a successful on-phone Room restore; that result is recorded separately in VERIFICATION.md.
 

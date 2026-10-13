@@ -25,7 +25,7 @@ Backups use Android's Storage Access Framework: choose where to save a JSON file
 
 Open **More → Backup & restore** to export or import. See [SETUP.md](SETUP.md) for installation and migration, [BACKEND_INTEGRATION.md](BACKEND_INTEGRATION.md) for business-rule mapping, and [VERIFICATION.md](VERIFICATION.md) for actual build/test results.
 
-Your existing localhost records are already supplied separately in **Reality-localhost-backup-2026-10-13.json**: 7 activities, 38 sessions and 27 breaks. Import that file after installing **Reality-Offline-debug.apk**; no new PC export is needed unless you add more PC records. The exported current streak of 9 and all twelve October monthly-report fields matched the live backend calculation. See SETUP.md for the exact phone steps.
+Your existing localhost records are already supplied separately in **Reality-localhost-backup-2026-10-14.json**: 7 activities, 39 sessions and 28 breaks. Import that file after installing **Reality-Offline-debug.apk**; no new PC export is needed unless you add more PC records. The current streak of 0, monthly best streak of 9 and all twelve October monthly-report fields matched the live backend calculation. October 13's scheduled target was not completed; the earlier history is preserved. See SETUP.md for the exact phone steps.
 
 ## Dates, duration and streaks
 
@@ -55,5 +55,4 @@ Open this directory, containing `settings.gradle.kts`, in Android Studio. Do not
 Linux/macOS: use `./gradlew` instead. The APK is `app/build/outputs/apk/debug/app-debug.apk`. Copy it to the phone, open it from Files and allow installation from that source when prompted, or use `adb install -r`.
 
 Release signing uses your own private keystore via Android Studio's signed APK/AAB wizard, or the existing private REALITY_KEYSTORE_* environment variables. No backend URL is needed. Do not commit keys/passwords. Keep your signing key: later updates must use the same identity to retain installed data.
-
 
