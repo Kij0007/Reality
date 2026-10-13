@@ -2,8 +2,10 @@ package com.reality.android.data
 
 import com.reality.android.data.backup.BackupCodec
 import com.reality.android.data.backup.RealityBackup
+import com.reality.android.data.local.RealityCalculations
 import com.reality.android.data.remote.dto.*
 import java.io.ByteArrayInputStream
+import java.time.LocalDate
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -44,6 +46,44 @@ class BackupCodecTest {
     @Test fun historicalOpenBreakOnFinishedSessionIsPreserved() {
         val value = backup().copy(breaks = listOf(backup().breaks.first().copy(endTime = null, duration = null)))
         assertNull(BackupCodec.decode(BackupCodec.encode(value).decodeToString()).breaks.single().endTime)
+    }
+
+    @Test fun editedFinishedSessionKeepsOutOfSessionBreakHistoryExactlyWithoutDeductingIt() {
+        val value = backup().copy(breaks = listOf(
+            BreakDto(5, 4, "2026-10-01T09:40:00", "2026-10-01T09:50:00", 600, "Before edited session"),
+            BreakDto(6, 4, "2026-10-01T11:30:00", "2026-10-01T11:40:00", 600, "After edited session"),
+        ))
+        val actual = BackupCodec.read(ByteArrayInputStream(BackupCodec.encode(value)))
+        assertEquals(value, actual)
+        assertEquals(3600L, RealityCalculations.day(actual.snapshot(), 2, LocalDate.parse("2026-10-01")).totalDuration)
+    }
+
+    @Test fun editedFinishedSessionDeductsOnlyTheOverlappingPartOfHistoricalBreaks() {
+        val value = backup().copy(breaks = listOf(
+            BreakDto(5, 4, "2026-10-01T09:55:00", "2026-10-01T10:05:00", 600),
+            BreakDto(6, 4, "2026-10-01T10:55:00", "2026-10-01T11:05:00", 600),
+        ))
+        val actual = BackupCodec.read(ByteArrayInputStream(BackupCodec.encode(value)))
+        assertEquals(value, actual)
+        assertEquals(3000L, RealityCalculations.day(actual.snapshot(), 2, LocalDate.parse("2026-10-01")).totalDuration)
+    }
+
+    @Test fun unfinishedSessionStillRejectsBreaksBeforeItsStart() {
+        rejected { BackupCodec.validate(backup().copy(breaks = listOf(
+            BreakDto(9, 8, "2026-10-13T08:50:00", "2026-10-13T09:00:00", 600),
+        ))) }
+        rejected { BackupCodec.validate(backup().copy(breaks = listOf(
+            BreakDto(9, 8, "2026-10-13T08:50:00"),
+        ))) }
+    }
+
+    @Test fun finishedHistoryStillRejectsReversedBreakTimesAndNegativeDurations() {
+        rejected { BackupCodec.validate(backup().copy(breaks = listOf(
+            BreakDto(5, 4, "2026-10-01T11:40:00", "2026-10-01T11:30:00", 600),
+        ))) }
+        rejected { BackupCodec.validate(backup().copy(breaks = listOf(
+            BreakDto(5, 4, "2026-10-01T11:30:00", "2026-10-01T11:40:00", -1),
+        ))) }
     }
 
     @Test fun originalArchivedActivitiesWithoutScheduleMetadataArePreserved() {

@@ -130,8 +130,10 @@ object BackupCodec {
             values.sortedBy { it.startTime }.forEach { item ->
                 val start = requireNotNull(stamp(item.startTime, "break start"))
                 val end = stamp(item.endTime, "break end")
-                require(!start.isBefore(sessionStart) && (sessionEnd == null || !start.isAfter(sessionEnd))) { "A break is outside its session." }
-                require(end == null || (!end.isBefore(start) && (sessionEnd == null || !end.isAfter(sessionEnd)))) { "A break has an invalid end time." }
+                // Edited source history can retain breaks outside a finished session's new
+                // boundaries. Preserve the raw times; progress clips their actual overlap.
+                require(sessionEnd != null || !start.isBefore(sessionStart)) { "A break starts before its unfinished session." }
+                require(end == null || !end.isBefore(start)) { "A break has an invalid end time." }
                 require(!previousOpen && (previousEnd == null || !start.isBefore(previousEnd))) { "A session contains overlapping breaks." }
                 require(item.duration == null || item.duration >= 0) { "A break has a negative duration." }
                 require(end != null || item.duration == null) { "An unfinished break cannot have a final duration." }

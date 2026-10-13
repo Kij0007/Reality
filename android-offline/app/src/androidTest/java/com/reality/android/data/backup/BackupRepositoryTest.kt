@@ -8,10 +8,13 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.reality.android.core.network.ApiResult
 import com.reality.android.core.network.MutationGate
 import com.reality.android.data.local.LocalRealityStore
+import com.reality.android.data.local.RealityCalculations
 import com.reality.android.data.local.RealityDatabase
 import com.reality.android.data.remote.dto.ActivityCategory
 import com.reality.android.data.remote.dto.ActivityRequest
 import java.io.File
+import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
@@ -20,6 +23,38 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class BackupRepositoryTest {
+    @Test fun restoreRetainsBreakOutsideEditedFinishedSessionWithoutDeductingIt() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val database = Room.inMemoryDatabaseBuilder(context, RealityDatabase::class.java).build()
+        val file = File.createTempFile("reality-edited-history-", ".json", context.cacheDir)
+        try {
+            val store = LocalRealityStore(database)
+            val repository = BackupRepository(context, store, MutationGate())
+            val start = LocalDateTime.parse("2026-10-05T09:00:00")
+            val activity = store.createActivity(ActivityRequest("Read", 1, ActivityCategory.STUDY,
+                setOf("MONDAY"), "2026-10-01"), start)
+            val session = store.startSession(activity.id, start)
+            store.startBreak(session.id, "Historical break", start.plusMinutes(1))
+            store.stopSession(session.id, start.plusMinutes(3))
+            val source = store.snapshot()
+            val history = source.copy(breaks = source.breaks.map {
+                it.copy(startTime = start.plusHours(1).toString(), endTime = start.plusHours(1).plusMinutes(2).toString())
+            })
+            val document = RealityBackup(exportedAt = Instant.now().toString(), timeZone = "UTC",
+                activities = history.activities, sessions = history.sessions, breaks = history.breaks)
+            file.writeBytes(BackupCodec.encode(document))
+            val inspected = repository.inspect(Uri.fromFile(file))
+            assertTrue(inspected is ApiResult.Success)
+            assertTrue(repository.restore((inspected as ApiResult.Success).data) is ApiResult.Success)
+            assertEquals(history, store.snapshot())
+            assertEquals(180L, RealityCalculations.day(store.snapshot(), activity.id,
+                LocalDate.parse("2026-10-05")).totalDuration)
+        } finally {
+            database.close()
+            file.delete()
+        }
+    }
+
     @Test fun documentRoundTripPreservesArchivedRowsBreaksIdsAndClock() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val database = Room.inMemoryDatabaseBuilder(context, RealityDatabase::class.java).build()
