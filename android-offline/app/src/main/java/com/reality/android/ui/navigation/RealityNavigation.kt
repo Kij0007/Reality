@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavDestination
@@ -53,16 +52,18 @@ fun RealityNavigation(model: NavigationViewModel = hiltViewModel()) {
         )
     }
     fun go(route: Any) {
-        if (!model.writing.value && nav.currentBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED) {
+        // Navigation handles transitions; launchSingleTop prevents repeated taps on the same route.
+        if (!model.writing.value) {
             nav.navigate(route) { launchSingleTop = true }
         }
     }
     fun top(route: Any) {
-        if (!model.writing.value && nav.currentBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED) {
+        if (!model.writing.value) {
             nav.navigate(route) {
-                popUpTo(nav.graph.findStartDestination().id) { saveState = true }
+                // Cross-feature detail routes share this flat graph. Restoring its saved stack
+                // can open Tracking when Activities was tapped, so tabs always open their route.
+                popUpTo(nav.graph.findStartDestination().id)
                 launchSingleTop = true
-                restoreState = true
             }
         }
     }
@@ -214,3 +215,4 @@ private fun MoreCard(title: Int, description: Int, onClick: () -> Unit) {
         }
     }
 }
+

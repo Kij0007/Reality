@@ -51,13 +51,6 @@ class StartupNavigationTest {
 
     private fun awaitText(resource: Int) = awaitText(text(resource))
 
-    private fun finishNavigationTransition() {
-        // Navigation accepts another destination only after the incoming entry is RESUMED.
-        compose.waitForIdle()
-        compose.mainClock.advanceTimeBy(1_000)
-        compose.waitForIdle()
-    }
-
     private fun clickDestination(resource: Int) {
         val matcher = hasText(text(resource)) and hasClickAction() and isEnabled()
         compose.waitUntil(15_000) { compose.onAllNodes(matcher).fetchSemanticsNodes().isNotEmpty() }
@@ -73,8 +66,9 @@ class StartupNavigationTest {
         compose.waitForIdle()
     }
 
-    private fun scrollListTo(resource: Int) {
-        val matcher = hasText(text(resource))
+    private fun scrollListTo(resource: Int) = scrollListTo(hasText(text(resource)))
+
+    private fun scrollListTo(matcher: SemanticsMatcher) {
         // Break/report rows arrive after asynchronous Room reads and may not yet be composed.
         compose.waitUntil(15_000) {
             runCatching {
@@ -213,12 +207,20 @@ class StartupNavigationTest {
         assertTrue(requireNotNull(pause.duration) >= 0)
         assertEquals("Offline break", pause.description)
 
+        // A committed row can precede the ViewModel's completed refresh and busy-state update.
+        scrollListTo(R.string.wf_start_session)
+        val readyToStart = hasText(text(R.string.wf_start_session)) and hasClickAction() and isEnabled()
+        compose.waitUntil(15_000) { compose.onAllNodes(readyToStart).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNode(readyToStart).assertIsDisplayed().assertIsEnabled()
+        val stoppedSession = hasText(text(R.string.wf_status_stopped)) and hasAnySibling(hasText(name))
+        scrollListTo(stoppedSession)
+        compose.onNode(stoppedSession).assertIsDisplayed()
+
         clickDestination(R.string.nav_activities)
         awaitText(R.string.wf_your_activities)
         compose.onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText(name))
         compose.onNode(hasText(name) and hasClickAction()).performClick()
         awaitText(R.string.wf_report)
-        finishNavigationTransition()
         clickScrollableButton(R.string.wf_report)
         awaitText(R.string.insights_reports)
         scrollListTo(R.string.insights_completion)
