@@ -30,7 +30,7 @@
     <string name="insights_no_schedule_today">Nothing is scheduled for today. You can still track an active activity.</string>
     <string name="insights_scheduled_today">Scheduled today</string>
     <string name="insights_optional_today">Not scheduled today</string>
-    <string name="insights_duration_target">%1$s recorded Â· %2$d min target</string>
+    <string name="insights_duration_target">%1$s recorded &#x00B7; %2$d min target</string>
     <string name="insights_target_completed">Daily target completed</string>
     <string name="insights_target_pending">Daily target not yet completed</string>
     <plurals name="insights_streak_days">
@@ -66,7 +66,7 @@
     <string name="insights_session_duration">Whole-session duration: %1$s</string>
     <string name="insights_view_session">View session and breaks</string>
     <string name="insights_reports">Monthly reports</string>
-    <string name="insights_report_identity">Activity %1$d Â· Report %2$d-%3$02d</string>
+    <string name="insights_report_identity">Activity %1$d &#x00B7; Report %2$d-%3$02d</string>
     <string name="insights_completion">Scheduled-day completion</string>
     <string name="insights_report_accountability_note">Scheduled, completed, and missed days count only fully finished calendar days in the selected month, beginning at the commitment start date. Today is not marked missed.</string>
     <string name="insights_total_duration">Recorded duration</string>

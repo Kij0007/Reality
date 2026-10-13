@@ -3,7 +3,7 @@
     <string name="wf_retry">Try again</string>
     <string name="wf_cancel">Cancel</string>
     <string name="wf_delete">Delete</string>
-    <string name="wf_deleting">Deletingâ€¦</string>
+    <string name="wf_deleting">Deleting&#x2026;</string>
     <string name="wf_choose_date">Choose date</string>
     <string name="wf_select">Select</string>
     <string name="wf_monday">Monday</string>
@@ -37,7 +37,7 @@
     <string name="wf_unnamed_activity">Unnamed activity</string>
     <string name="wf_minutes_target">%1$d min daily minimum</string>
     <string name="wf_target_unavailable">Daily minimum unavailable</string>
-    <string name="wf_incomplete_schedule">Complete this activityâ€™s schedule</string>
+    <string name="wf_incomplete_schedule">Complete this activity&#x2019;s schedule</string>
     <string name="wf_starts_on">Commitment begins: %1$s</string>
     <string name="wf_edit">Edit</string>
     <string name="wf_edit_activity">Edit activity</string>
@@ -49,7 +49,7 @@
     <string name="wf_commitment_start">Commitment start date</string>
     <string name="wf_start_date_hint">Choose the date this commitment actually began. It affects streaks and historical reports.</string>
     <string name="wf_repeat_days">Repeat days</string>
-    <string name="wf_saving">Savingâ€¦</string>
+    <string name="wf_saving">Saving&#x2026;</string>
     <string name="wf_save_activity">Save activity</string>
     <string name="wf_inactive">Inactive</string>
     <string name="wf_active">Active</string>
@@ -57,7 +57,7 @@
     <string name="wf_incomplete_schedule_body">Add a commitment start date and at least one repeat day before viewing streaks and reports.</string>
     <string name="wf_created">Created: %1$s</string>
     <string name="wf_updated">Updated: %1$s</string>
-    <string name="wf_working">Workingâ€¦</string>
+    <string name="wf_working">Working&#x2026;</string>
     <string name="wf_start_session">Start session</string>
     <string name="wf_view_sessions">View sessions</string>
     <string name="wf_progress">Progress and streak</string>
@@ -68,7 +68,7 @@
     </plurals>
     <string name="wf_delete_activity">Delete activity</string>
     <string name="wf_verify_sessions_before_actions">Refresh session data before starting or deleting this activity.</string>
-    <string name="wf_stop_before_delete">Stop this activityâ€™s open sessions before deleting it.</string>
+    <string name="wf_stop_before_delete">Stop this activity&#x2019;s open sessions before deleting it.</string>
     <string name="wf_activity_delete_hint">Deleting hides the activity. Existing session history is retained. Use a full backup restore to recover earlier data.</string>
     <string name="wf_activity_delete_confirm">Hide this activity from the active list? Its session history will remain. Recovering it requires restoring an earlier backup.</string>
     <string name="wf_session_started">Session started.</string>
