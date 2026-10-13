@@ -212,7 +212,8 @@ class StartupNavigationTest {
         val readyToStart = hasText(text(R.string.wf_start_session)) and hasClickAction() and isEnabled()
         compose.waitUntil(15_000) { compose.onAllNodes(readyToStart).fetchSemanticsNodes().isNotEmpty() }
         compose.onNode(readyToStart).assertIsDisplayed().assertIsEnabled()
-        val stoppedSession = hasText(text(R.string.wf_status_stopped)) and hasAnySibling(hasText(name))
+        val stoppedSession = hasText(text(R.string.wf_status_stopped)) and
+            hasAnySibling(hasText(name)) and hasClickAction().not()
         scrollListTo(stoppedSession)
         compose.onNode(stoppedSession).assertIsDisplayed()
 
