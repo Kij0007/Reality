@@ -37,13 +37,26 @@ class StartupNavigationTest {
     private fun text(resource: Int) = compose.activity.getString(resource)
 
     private fun awaitText(label: String) {
-        compose.waitUntil(timeoutMillis = 15_000) {
-            compose.onAllNodesWithText(label).fetchSemanticsNodes().isNotEmpty()
+        try {
+            compose.waitUntil(timeoutMillis = 15_000) {
+                compose.onAllNodesWithText(label).fetchSemanticsNodes().isNotEmpty()
+            }
+            compose.waitForIdle()
+        } catch (failure: ComposeTimeoutException) {
+            println("Timed out awaiting '$label'. Current native UI:\n" + compose.onRoot(useUnmergedTree = true).printToString())
+            runCatching { screenshot("failure") }.onFailure { println("Failure screenshot could not be captured: ${it.message}") }
+            throw failure
         }
-        compose.waitForIdle()
     }
 
     private fun awaitText(resource: Int) = awaitText(text(resource))
+
+    private fun finishNavigationTransition() {
+        // Navigation accepts another destination only after the incoming entry is RESUMED.
+        compose.waitForIdle()
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.waitForIdle()
+    }
 
     private fun clickDestination(resource: Int) {
         val matcher = hasText(text(resource)) and hasClickAction() and isEnabled()
@@ -205,6 +218,7 @@ class StartupNavigationTest {
         compose.onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText(name))
         compose.onNode(hasText(name) and hasClickAction()).performClick()
         awaitText(R.string.wf_report)
+        finishNavigationTransition()
         clickScrollableButton(R.string.wf_report)
         awaitText(R.string.insights_reports)
         scrollListTo(R.string.insights_completion)

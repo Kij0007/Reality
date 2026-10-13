@@ -17,7 +17,11 @@ trap 'adb shell cmd connectivity airplane-mode disable >/dev/null 2>&1 || true' 
 report_dir=app/build/reports/androidTests/screenshots
 mkdir -p "$report_dir"
 capture_status=0
-for screen in dashboard settings backup validation tracking report; do
+screens=(dashboard settings backup validation tracking report)
+if adb shell test -f "$capture_dir/verification-failure.png"; then
+  screens+=(failure)
+fi
+for screen in "${screens[@]}"; do
   temporary="$report_dir/$screen.png.tmp"
   rm -f "$temporary" "$report_dir/$screen.png"
   if ! adb pull "$capture_dir/verification-$screen.png" "$temporary"; then
@@ -48,3 +52,4 @@ if (( test_status != 0 )); then
   exit "$test_status"
 fi
 exit "$capture_status"
+
