@@ -1,0 +1,21 @@
+<resources>
+    <string name="backup_title">Backup and restore</string>
+    <string name="backup_description">Keep a portable copy of your Reality history. Your activities, schedules, sessions, breaks and timestamps are stored on this phone.</string>
+    <string name="backup_export_title">Export all data</string>
+    <string name="backup_export_help">Save a JSON file wherever you choose. It includes archived activities and a current streak snapshot; reports and streaks can be rebuilt from the complete history.</string>
+    <string name="backup_export">Export backup</string>
+    <string name="backup_plaintext">This file contains readable activity history. Keep it somewhere private. Passwords, login tokens and database credentials are never included.</string>
+    <string name="backup_restore_title">Restore or migrate</string>
+    <string name="backup_restore_help">Choose a Reality backup from this phone or a file transferred from your computer. The complete file is checked before any phone data changes.</string>
+    <string name="backup_choose">Choose backup file</string>
+    <string name="backup_migration_help">For existing localhost data, run Export-Reality-Localhost.ps1 on your computer, transfer the resulting JSON file to this phone, then choose it here. No server is needed after import.</string>
+    <string name="backup_working">Preparing your data&#x2026;</string>
+    <string name="backup_confirm_title">Replace phone data?</string>
+    <string name="backup_counts">%1$d activities &#x00B7; %2$d sessions &#x00B7; %3$d breaks</string>
+    <string name="backup_zone">History timezone: %1$s</string>
+    <string name="backup_confirm_warning">This replaces all existing Reality data on this phone, including running sessions. Export a backup first if you want to keep the current data. Your computer database is not changed.</string>
+    <string name="backup_cancel">Cancel</string>
+    <string name="backup_replace">Replace and restore</string>
+    <string name="backup_export_success">Backup saved.</string>
+    <string name="backup_restore_success">All data restored. Streaks and reports now use your imported history.</string>
+</resources>

@@ -38,3 +38,6 @@ build/
 *.jks
 *.keystore
 local.properties
+__pycache__/
+*.py[cod]
+
