@@ -25,6 +25,7 @@ The local implementation preserves the business behavior of Reality's six origin
 | Backup export | New client capability | Save JSON through Android file picker | Activities, sessions, breaks, metadata and timezone |
 | Restore | New client capability | File validation, summary and replacement confirmation | Atomic local replacement; no silent merge |
 | PC data migration | Existing PostgreSQL records | One-time export file and Android restore | Includes inactive activity parents and full history |
+| Imported finished-session history | Stored session and break timestamps | Exact record restore in app version 1.0.1 | Out-of-session historical breaks retained; daily/report overlap clipped |
 | Online registration/login/logout | New online-only account APIs | Not used | One phone installation has one local dataset |
 | Backend URL/network connection | Online client | Not used | No INTERNET permission |
 | Web/other-phone synchronization | Online shared backend | Not supplied | Offline backups transfer copies explicitly |
@@ -32,4 +33,6 @@ The local implementation preserves the business behavior of Reality's six origin
 Daily totals/reports exclude ongoing sessions until finished, as the existing repository query does. Today's duration may appear in monthly totals, while completion, missed days and streak evaluation stop at yesterday. The current streak in a monthly report is the present overall streak; longestStreak is the best streak inside the selected month.
 
 Migration does not claim that a stored streak row exists: the backend calculates it from activity targets/start dates/weekdays, finished sessions and breaks. Those source records must all be exported. Backend accounts/passwords/tokens are not copied to the offline app.
+
+The latest private snapshot, Reality-localhost-backup-2026-10-14-1833.json, contains 7 activities, 40 sessions, 28 breaks and one comparison streak snapshot. Its current streak of 10, October best streak of 10 and all twelve October monthly-report fields matched the live backend. Historical timestamps and records remain unchanged during restore, including breaks outside a finished session's recorded boundaries after source edits. Restore replaces one complete dataset; it does not merge a phone-only backup with the PC snapshot.
 

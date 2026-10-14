@@ -2,7 +2,7 @@
 
 ## Install
 
-1. Copy the provided Reality-Offline-debug.apk to your Android phone.
+1. Copy the updated Reality-Offline-debug.apk, version 1.0.1-debug (versionCode 2), to your Android phone.
 2. Open the APK in Files. If prompted, allow that file/transfer app to install applications and tap Install.
 3. Open Reality Offline. It works with an empty database and needs no sign-in, internet, server URL or hosting.
 4. Keep the data timezone at Asia/Kolkata if your existing Spring Boot application uses that zone. This preserves the existing calendar days and local timestamps.
@@ -10,21 +10,28 @@
 
 The offline app has its own application ID, so installing it does not overwrite the online Reality app. Updates using the same APK signing identity retain its local records.
 
+If an older Reality Offline debug APK is already installed:
+
+1. Open the old app's **More → Backup & restore → Export backup** and save any phone-only records to Documents or Downloads. Keep a second copy outside the phone before uninstalling.
+2. Try installing the updated APK normally. If it uses the same signing key, Android can update the app while retaining its database.
+3. If Android reports an incompatible signature or an update/signing conflict, first confirm your exported backup is safely saved. Then uninstall the old **Reality Offline** app and install version 1.0.1.
+4. Restore the complete backup you want to continue using. Choose your phone backup to retain the phone dataset, or the supplied localhost snapshot to use the PC dataset. Each restore replaces the whole local dataset; the app does not merge these JSON files. Keep both files if you need to preserve both histories.
+
 ## Import the backup already prepared for you
 
-Your current localhost database was exported read-only on **14 October 2026**. The supplied **Reality-localhost-backup-2026-10-14.json** contains **7 activities (including 6 inactive), 39 sessions and 28 breaks**. The active activity's calculated **current streak is 0**, matching the localhost API through October 13; its **October best streak is 9**. October 13's scheduled target was not completed. All twelve October 2026 monthly-report fields were also compared with the localhost response.
+Your latest localhost database snapshot was exported read-only on **14 October 2026**. The supplied **Reality-localhost-backup-2026-10-14-1833.json** contains **7 activities (including 6 inactive), 40 sessions, 28 breaks and one comparison streak snapshot**. The active activity's calculated **current streak is 10**, matching the localhost API through October 13; its **October best streak is 10**. All twelve October 2026 monthly-report fields matched the localhost response. Records, IDs and timestamps were retained unchanged.
 
 You do not need to run the export script to use this prepared snapshot:
 
-1. Copy Reality-localhost-backup-2026-10-14.json to the phone alongside the APK.
-2. Install/open Reality Offline.
+1. Copy Reality-localhost-backup-2026-10-14-1833.json to the phone alongside the APK.
+2. Install/open the updated Reality Offline version 1.0.1. Follow the safe-update steps above if an older debug app is already installed.
 3. Open **More → Backup & restore → Choose backup file** and select the JSON.
-4. Review **7 activities, 39 sessions, 28 breaks** and timezone **Asia/Kolkata**.
+4. Review **7 activities, 40 sessions, 28 breaks** and timezone **Asia/Kolkata**.
 5. Tap **Replace and restore**. If you already created phone records, export them first or cancel; restore replaces the whole local dataset.
 6. Open Progress and Reports. Inactive activities remain hidden from the active list but their stored history remains available.
 7. Export a fresh phone backup after checking the imported data. Your laptop, PostgreSQL and Spring Boot can then remain off.
 
-This is a point-in-time copy, not synchronization. If you record more PC sessions after 14 October, create a newer export using the section below. The streak remains a live calculation: later missed scheduled days can change its current value. The personal JSON is supplied separately and is not committed to the public repository or embedded in the APK/source ZIP.
+This is a point-in-time copy, not synchronization. If you create or edit PC records after this snapshot, create a newer export using the section below. The streak remains a live calculation: later missed scheduled days can change its current value. The personal JSON is supplied separately and is not committed to the public repository or embedded in the APK/source ZIP.
 
 ## Move existing PC data
 
@@ -77,6 +84,8 @@ After obtaining the export JSON:
 7. Save a fresh phone backup once the imported records are correct. Your laptop/server can then remain off.
 
 Invalid/unsupported files are rejected before replacement. Older inactive activities can lack metadata added later; these null fields are retained so their session/break history is not discarded. Active activities need valid metadata to calculate progress/streaks. Missing history cannot be manufactured. Preserve your old database and inspect the export summary before proceeding.
+
+Version 1.0.1 also preserves breaks whose original timestamps lie outside a finished session's recorded boundaries, including history retained after that session was edited on the PC. The timestamps and stored records stay unchanged. Daily progress and monthly reports clip actual overlap using the backend's rules. Invalid individual start/end chronology, missing references, overlapping breaks and breaks preceding an unfinished session are still rejected.
 
 ## Export phone backup
 

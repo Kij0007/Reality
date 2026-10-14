@@ -25,7 +25,7 @@ Backups use Android's Storage Access Framework: choose where to save a JSON file
 
 Open **More → Backup & restore** to export or import. See [SETUP.md](SETUP.md) for installation and migration, [BACKEND_INTEGRATION.md](BACKEND_INTEGRATION.md) for business-rule mapping, and [VERIFICATION.md](VERIFICATION.md) for actual build/test results.
 
-Your existing localhost records are already supplied separately in **Reality-localhost-backup-2026-10-14.json**: 7 activities, 39 sessions and 28 breaks. Import that file after installing **Reality-Offline-debug.apk**; no new PC export is needed unless you add more PC records. The current streak of 0, monthly best streak of 9 and all twelve October monthly-report fields matched the live backend calculation. October 13's scheduled target was not completed; the earlier history is preserved. See SETUP.md for the exact phone steps.
+Your latest localhost records are supplied separately in **Reality-localhost-backup-2026-10-14-1833.json**: 7 activities, 40 sessions, 28 breaks and one comparison streak snapshot. Import that file after installing the updated **Reality-Offline-debug.apk**, version **1.0.1-debug** (versionCode 2). The current streak of **10**, October best streak of **10** and all twelve October monthly-report fields matched the live backend calculation for this snapshot. Create a newer PC export if you subsequently create or edit PC records. See SETUP.md for the phone steps and safe updates from an older debug installation.
 
 ## Dates, duration and streaks
 
@@ -33,11 +33,15 @@ Reality's Spring Boot timestamps are LocalDateTime values without offsets. The i
 
 Activity targets are minutes. Session/break durations and report work totals are seconds. Daily/report work comes from finished sessions, clipped to calendar-day boundaries with overlapping break time removed. Running timers survive closing/reopening the app because start/break timestamps are saved, rather than counting Compose ticks.
 
+Imports retain historical session and break timestamps exactly, including breaks outside a finished session's recorded boundaries after source history was edited. Daily progress and monthly reports count only their actual overlap; importing does not rewrite those records.
+
 The current streak counts completed scheduled days through yesterday. Unscheduled days are skipped; a missed scheduled day ends the streak. Import preserves the records from which the streak is calculated, rather than freezing a number forever. If additional scheduled days were missed after export, the current streak can correctly change. Monthly longest streak is a separate selected-month value.
 
 ## Data ownership and backups
 
 The database is inside Android's app-private storage and survives app restarts/reboots. Uninstalling the app, clearing its storage or losing the phone can remove it. Export a backup outside app-private storage before uninstalling, and keep another copy somewhere safe.
+
+Before updating an older debug APK, export any phone-only records. If Android reports a signing conflict, follow SETUP.md: keep that exported file, uninstall the older Reality Offline installation only if necessary, then install version 1.0.1 and restore your chosen complete backup. A phone backup and the PC snapshot are separate datasets; restore does not merge them.
 
 The JSON backup contains personal activity/history data and is not encrypted by the app. It contains no PostgreSQL password, authentication token or server login. Choose a location you control and transfer it securely. Restore replaces the local dataset; it does not merge unrelated databases or update the PC backend. Version 1 backups are limited to 20 MiB and 200,000 combined records, including optional streak snapshots, to bound import memory.
 

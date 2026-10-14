@@ -2,15 +2,19 @@
 
 ## APK does not install
 
-Use Android 8/API 26 or newer. Open the APK using Files and allow installation from that specific source when prompted. A later APK with the same application ID must be signed with the same key; do not uninstall just to bypass a signing mismatch before exporting your existing records.
+Use Android 8/API 26 or newer and the updated Reality-Offline-debug.apk, version 1.0.1-debug (versionCode 2). Open it using Files and allow installation from that specific source when prompted.
+
+If an old debug installation causes a signing/update conflict, first open the old Reality Offline app and export any phone-only records through More → Backup & restore. Save the JSON outside app-private storage and keep another copy safe. Try the normal update first; updates with the same key retain the database. If Android still rejects the signature, uninstall the old Reality Offline app only after saving its backup, install version 1.0.1, and restore the complete backup you choose. Restoring a phone backup retains that phone dataset; restoring the localhost file replaces it with the PC snapshot. The app does not merge the two files.
 
 ## Data is empty after installation
 
-The offline app is a separate installation from the online app. It does not automatically read PostgreSQL, the web browser or another Android app's private storage. Import the already supplied Reality-localhost-backup-2026-10-14.json from More → Backup & restore → Choose backup file. It contains the checked 7 activities, 39 sessions and 28 breaks. Export again only if you need newer PC records. A new offline installation starts empty.
+The offline app is a separate installation from the online app. It does not automatically read PostgreSQL, the web browser or another Android app's private storage. Import the supplied Reality-localhost-backup-2026-10-14-1833.json from More → Backup & restore → Choose backup file. It contains the checked 7 activities, 40 sessions, 28 breaks and one comparison streak snapshot. Current streak 10, October best streak 10 and all twelve monthly-report fields matched the backend for that snapshot. Export again if you need later PC changes. A new offline installation starts empty.
 
 ## Restore file is rejected
 
-Use a Reality version 1 UTF-8 backup/export JSON file, not a PostgreSQL SQL dump, screenshot, ZIP or a copied web page. The importer checks the format/version, dates/enums/IDs, relationships and valid session/break intervals before changing the database. Files are limited to 20 MiB and 200,000 combined records. Keep the original file and read the displayed validation message. Do not manually guess missing IDs or edit duration values to make the file pass.
+Use a Reality version 1 UTF-8 backup/export JSON file, not a PostgreSQL SQL dump, screenshot, ZIP or a copied web page. The importer checks the format/version, dates/enums/IDs, relationships, nonnegative durations and each session/break's start/end chronology before changing the database. Overlapping breaks and breaks preceding an unfinished session are rejected. Files are limited to 20 MiB and 200,000 combined records. Keep the original file and read the displayed validation message. Do not manually guess missing IDs or edit duration values to make the file pass.
+
+Use app version 1.0.1 for imported finished-session history with break timestamps outside its recorded session boundaries. The updated importer preserves those historical timestamps and records. Daily progress and monthly reports count only actual overlap; the import does not rewrite source history. If an older APK rejects such a file, update safely using the installation steps above.
 
 ## Restore would overwrite records I created on the phone
 
@@ -21,6 +25,8 @@ Cancel. Export the phone dataset first. Restore is complete replacement after co
 Compare the same activity, current date and original data timezone. Reality evaluates completed scheduled days through yesterday, skips non-scheduled days and stops at the first missed scheduled day. Today's completion does not yet increase that streak. A missed scheduled date after the old export can correctly reduce the present streak.
 
 Check imported start date, repeat weekdays, minute target and finished session/break history. Backend streaks were calculated, not stored as an independent counter. Missing source history cannot be reconstructed from a single visible streak number.
+
+The latest supplied 14 October snapshot matched current streak 10 through 13 October and October's best streak 10. Use that snapshot when comparing these checked values; later source edits or scheduled dates can legitimately change the calculation.
 
 ## Reports are lower than the running timer
 

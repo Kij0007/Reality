@@ -2,6 +2,8 @@
 
 This is the independently openable Android project in android-offline. **96 source/configuration/resource/document files** are listed below, including this manifest and the binary Gradle wrapper JAR. The source ZIP is delivered as Reality-Offline.zip; the installable artifact is Reality-Offline-debug.apk.
 
+The updated app is version 1.0.1 (debug versionName 1.0.1-debug, versionCode 2). Its importer preserves original finished-session history with breaks outside the recorded session boundaries; calculated daily/report overlap remains clipped. Before replacing an older debug installation with a different signing key, export any phone-only dataset and follow SETUP.md's safe update instructions.
+
 Open the extracted directory containing settings.gradle.kts in Android Studio. None of these files belongs under Spring Boot src/main/resources/static. Local build/cache directories, local.properties, private keys/passwords and personal backup JSON files are excluded. The generated Room version 1 schema is included so future database migrations can be reviewed. Build outputs and caches are excluded.
 
 ```text
@@ -113,5 +115,5 @@ The complete repository supplies these files under scripts/:
 - requirements-export.txt — pinned optional pg8000 dependency.
 - test_export_localhost.py — exporter tests.
 
-The private existing-data file is supplied separately as Reality-localhost-backup-2026-10-14.json. It is deliberately absent from this manifest, the public repository and the Android source/APK; import it using the native file picker.
+The private existing-data file is supplied separately as Reality-localhost-backup-2026-10-14-1833.json: 7 activities, 40 sessions, 28 breaks and one comparison streak snapshot. Current streak 10, October best streak 10 and all twelve October monthly-report fields matched the running backend for this snapshot. It is deliberately absent from this manifest, the public repository and the Android source/APK; import it using the native file picker. Restore replaces a complete dataset and does not merge it with an independently exported phone backup.
 
